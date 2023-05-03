@@ -8,7 +8,8 @@ pub mod body {
         wound,
         paralised,
         broken,
-        destroyed
+        destroyed,
+        missing
     }
 
     #[derive(PartialEq, Debug, Clone, Copy)]
