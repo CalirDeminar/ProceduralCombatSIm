@@ -11,9 +11,11 @@ pub mod humanoid {
     pub fn humanoid() -> Creature {
         return Creature {
             species: String::from("Human"),
+            health_stats: baseHealthStats(),
             body: BodyPart {
                 name: String::from("Body"),
                 tags: vec![],
+                statuses: vec![],
                 internal: vec![
                     hearts(1, BODY_SIZE),
                     spine(BODY_SIZE),
@@ -24,6 +26,7 @@ pub mod humanoid {
                         BodyPart {
                             name: String::from("Head"),
                             tags: vec![],
+                            statuses: vec![],
                             internal: vec![
                                 eyes(2, HEAD_SIZE),
                                 ears(2, HEAD_SIZE),
@@ -34,28 +37,32 @@ pub mod humanoid {
                         },
                         BodyPart {
                             name: String::from("Left Arm"),
-                            tags: vec![BodyPartTags::left],
+                            tags: vec![BodyPartTag::left],
+                            statuses: vec![],
                             internal: vec![],
                             children: vec![],
                             size: LIMB_SIZE
                         },
                         BodyPart {
                             name: String::from("Right Arm"),
-                            tags: vec![BodyPartTags::right],
+                            tags: vec![BodyPartTag::right],
+                            statuses: vec![],
                             internal: vec![],
                             children: vec![],
                             size: LIMB_SIZE
                         },
                         BodyPart {
                             name: String::from("Left Leg"),
-                            tags: vec![BodyPartTags::left],
+                            tags: vec![BodyPartTag::left],
+                            statuses: vec![],
                             internal: vec![],
                             children: vec![],
                             size: LIMB_SIZE
                         },
                         BodyPart {
                             name: String::from("Right Leg"),
-                            tags: vec![BodyPartTags::right],
+                            tags: vec![BodyPartTag::right],
+                            statuses: vec![],
                             internal: vec![],
                             children: vec![],
                             size: LIMB_SIZE

@@ -2,7 +2,17 @@ pub mod body {
     use rand::Rng;
 
     #[derive(Debug, Clone, Copy)]
-    pub enum BodyPartTags {
+    pub enum BodyPartStatus {
+        bruise,
+        cut,
+        wound,
+        paralised,
+        broken,
+        destroyed
+    }
+
+    #[derive(Debug, Clone, Copy)]
+    pub enum BodyPartTag {
         // Core
         breath,
         thought,
@@ -24,7 +34,8 @@ pub mod body {
     #[derive(Debug, Clone)]
     pub struct BodyPart {
         pub name: String,
-        pub tags: Vec<BodyPartTags>,
+        pub tags: Vec<BodyPartTag>,
+        pub statuses: Vec<BodyPartStatus>,
         pub internal: Vec<BodyPart>,
         pub children: Vec<BodyPart>,
         pub size: i32,
