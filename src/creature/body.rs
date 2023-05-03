@@ -1,7 +1,7 @@
 pub mod body {
     use rand::Rng;
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartStatus {
         bruise,
         cut,
@@ -11,7 +11,7 @@ pub mod body {
         destroyed
     }
 
-    #[derive(Debug, Clone, Copy)]
+    #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartTag {
         // Core
         breath,
@@ -31,7 +31,7 @@ pub mod body {
         right,
         joint
     }
-    #[derive(Debug, Clone)]
+    #[derive(PartialEq, Debug, Clone)]
     pub struct BodyPart {
         pub name: String,
         pub tags: Vec<BodyPartTag>,
@@ -48,30 +48,31 @@ pub mod body {
         }
         return total;
     }
-    fn flatten_body(body: &BodyPart) -> Vec<&BodyPart> {
+    pub fn flatten_children(body: &BodyPart) -> Vec<&BodyPart> {
         if body.children.len() == 0 {
             return vec![&body];
         }
         let mut children: Vec<Vec<&BodyPart>> = vec![vec![body]];
         for child in &body.children {
-            children.push(flatten_body(&child));
+            children.push(flatten_children(&child));
         }
 
         return children.concat();
     }
-    fn flatten_internals(body: &BodyPart) -> Vec<&BodyPart> {
-        if body.children.len() == 0 {
-            return vec![&body];
+    pub fn flatten_internals(body: &BodyPart) -> Vec<&BodyPart> {
+        let parts = flatten_children(&body);
+        let mut output: Vec<Vec<&BodyPart>> = vec![vec![]];
+        for part in parts {
+            let internal = part.internal.iter().collect();
+            output.push(internal);
         }
-        let mut children: Vec<Vec<&BodyPart>> = vec![vec![body]];
-        for child in &body.internal {
-            children.push(flatten_internals(&child));
-        }
-
-        return children.concat();
+        return output.concat();
+    }
+    pub fn flatten_all(body: &BodyPart) -> Vec<&BodyPart> {
+        return vec![flatten_children(&body), flatten_internals(&body)].concat();
     }
     pub fn random_weighted_part(body: &BodyPart) -> &BodyPart {
-        let all_parts = flatten_body(&body);
+        let all_parts = flatten_children(&body);
         let total_size = sum_part_size(&all_parts);
 
         let mut rng = rand::thread_rng();
@@ -93,8 +94,9 @@ pub mod body {
         if p.internal.len() == 0 {
             return p;
         }
-        let all_parts = flatten_internals(&body);
-        let total_size = sum_part_size(&all_parts);
+        
+        let internals: Vec<&BodyPart> = vec![body.internal.iter().collect(), vec![p]].concat();
+        let total_size = sum_part_size(&internals);
 
 
         let mut rng = rand::thread_rng();
@@ -102,7 +104,7 @@ pub mod body {
         let roll = (r * total_size as f32) as i32;
 
         let mut t = 0;
-        for part in all_parts {
+        for part in internals {
             t += part.size;
             if t > roll {
                 return part;
@@ -110,5 +112,29 @@ pub mod body {
         }
 
         return body;
+    }
+
+    #[test]
+    fn flatten_children_humanoid() {
+        use crate::creature::humanoid::humanoid::*;
+        let subject = humanoid();
+        let flattened = flatten_children(&subject.body);
+        assert_eq!(flattened.len(), 6);
+    }
+
+    #[test]
+    fn flatten_internals_humanoid() {
+        use crate::creature::humanoid::humanoid::*;
+        let subject = humanoid();
+        let internals = flatten_internals(&subject.body);
+        assert_eq!(internals.len(), 9);
+    }
+
+    #[test]
+    fn flatten_all_humanoid() {
+        use crate::creature::humanoid::humanoid::*;
+        let subject = humanoid();
+        let all = flatten_all(&subject.body);
+        assert_eq!(all.len(), 15);
     }
 }

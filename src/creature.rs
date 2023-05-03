@@ -8,18 +8,42 @@ pub mod creature {
 
     #[derive(Debug, Clone)]
     pub struct HealthStats {
-        alive: bool,
+        pub alive: bool,
         // Ptcs 0<->1
-        bloodVolPtc: f64,
-        bloodOxyPtc: f64
+        pub bloodVolPtc: f64,
+        pub bloodOxyPtc: f64
     }
 
-    pub fn baseHealthStats() -> HealthStats {
+    pub fn base_health_stats() -> HealthStats {
         return HealthStats {
             alive: true,
             bloodVolPtc: 1.0,
             bloodOxyPtc: 1.0
         }
+    }
+
+    fn get_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> Vec<&BodyPart> {
+        let parts = flatten_all(&body);
+        let mut output = vec![];
+        for part in parts {
+            if part.tags.contains(&tag) {
+                output.push(part);
+            }
+        }
+        return output;
+    }
+
+    fn count_functional_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
+        let parts = get_tagged_parts(&body, tag);
+        return parts
+            .iter()
+            .filter(|p| 
+                !(
+                    p.statuses.contains(&BodyPartStatus::destroyed) || 
+                    p.statuses.contains(&BodyPartStatus::paralised)
+                )
+            )
+            .count();
     }
 
     pub fn recalculate_health(subject: Creature) -> Creature {

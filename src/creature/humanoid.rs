@@ -11,7 +11,7 @@ pub mod humanoid {
     pub fn humanoid() -> Creature {
         return Creature {
             species: String::from("Human"),
-            health_stats: baseHealthStats(),
+            health_stats: base_health_stats(),
             body: BodyPart {
                 name: String::from("Body"),
                 tags: vec![],
