@@ -13,15 +13,15 @@ pub mod organs {
             })
         }
         if count == 2 {
-            output[0].tags.push(BodyPartTag::left);
-            output[1].tags.push(BodyPartTag::right);
+            output[0].tags.push(BodyPartTag::Left);
+            output[1].tags.push(BodyPartTag::Right);
         }
         return output;
     }
     pub fn hearts(count: i32, parent_size: i32) -> Vec<BodyPart> {
         return gen_organ_set(
             String::from("Heart"), 
-            vec![BodyPartTag::circulation], 
+            vec![BodyPartTag::Circulation], 
             count, 
             parent_size / 20
         );
@@ -29,7 +29,7 @@ pub mod organs {
     pub fn lungs(count: i32, parent_size: i32) -> Vec<BodyPart> {
         return gen_organ_set(
             String::from("Lung"), 
-            vec![BodyPartTag::breath], 
+            vec![BodyPartTag::Breath], 
             count, 
             parent_size / 10
         );
@@ -38,7 +38,7 @@ pub mod organs {
         return vec![BodyPart {
             name: String::from("Spine"),
             statuses: vec![],
-            tags: vec![ BodyPartTag::nervous],
+            tags: vec![ BodyPartTag::Nervous],
             internal: vec![],
             children: vec![],
             size: parent_size / 12
@@ -48,7 +48,7 @@ pub mod organs {
         return vec![BodyPart {
             name: String::from("Brain"),
             statuses: vec![],
-            tags: vec![ BodyPartTag::thought],
+            tags: vec![ BodyPartTag::Thought],
             internal: vec![],
             children: vec![],
             size: parent_size / 2
@@ -57,7 +57,7 @@ pub mod organs {
     pub fn eyes(count: i32, parent_size: i32) -> Vec<BodyPart> {
         return gen_organ_set(
             String::from("Eye"), 
-            vec![BodyPartTag::sight], 
+            vec![BodyPartTag::Sight], 
             count, 
             parent_size / 60
         );
@@ -65,7 +65,7 @@ pub mod organs {
     pub fn ears(count: i32, parent_size: i32) -> Vec<BodyPart> {
         return gen_organ_set(
             String::from("Ear"), 
-            vec![BodyPartTag::hearing], 
+            vec![BodyPartTag::Hearing], 
             count, 
             parent_size / 60
         );
@@ -74,7 +74,7 @@ pub mod organs {
         return vec![BodyPart {
             name: String::from("Nose"),
             statuses: vec![],
-            tags: vec![BodyPartTag::smell],
+            tags: vec![BodyPartTag::Smell],
             internal: vec![],
             children: vec![],
             size: parent_size / 60

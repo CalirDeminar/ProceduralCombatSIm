@@ -24,41 +24,16 @@ pub mod creature {
         }
     }
 
-    fn get_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> Vec<&BodyPart> {
-        let parts = flatten_all(&body);
-        let mut output = vec![];
-        for part in parts {
-            if part.tags.contains(&tag) {
-                output.push(part);
-            }
-        }
-        return output;
-    }
-
-    fn count_functional_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
-        let parts = get_tagged_parts(&body, tag);
-        return parts
-            .iter()
-            .filter(|p| 
-                !(
-                    p.statuses.contains(&BodyPartStatus::destroyed) || 
-                    p.statuses.contains(&BodyPartStatus::paralised) ||
-                    p.statuses.contains(&BodyPartStatus::missing)
-                )
-            )
-            .count();
-    }
-
     fn calc_body_part_bleed_amount(part: &BodyPart, creature_size: i32) -> f32 {
         let base_volume = (part.size as f32) / (creature_size as f32);
-        if part.statuses.contains(&BodyPartStatus::destroyed) || 
-            part.statuses.contains(&BodyPartStatus::missing) {
+        if part.statuses.contains(&BodyPartStatus::Destroyed) || 
+            part.statuses.contains(&BodyPartStatus::Missing) {
             return base_volume;
         }
-        if part.statuses.contains(&BodyPartStatus::wound) {
+        if part.statuses.contains(&BodyPartStatus::Wound) {
             return base_volume / 2.0;
         }
-        if part.statuses.contains(&BodyPartStatus::cut) {
+        if part.statuses.contains(&BodyPartStatus::Cut) {
             return base_volume / 4.0;
         }
         return 0.0;
@@ -73,18 +48,11 @@ pub mod creature {
         return total;
     }
 
-    fn get_ratio_of_working_body_tags(body: &BodyPart, tag: BodyPartTag) -> f32 {
-        // TODO - rework this to work by part size ratios
-        let total_count = get_tagged_parts(body, tag).len();
-        let working_count = count_functional_tagged_parts(body, tag);
-        return (working_count as f32) / (total_count as f32);
-    }
-
     pub fn recalculate_health<'a>(subject: &'a mut Creature) -> &'a Creature {
         let creature_size = calc_creature_size(&subject.body);
         
-        let working_breath_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::breath);
-        let working_circulation_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::circulation);
+        let working_breath_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::Breath);
+        let working_circulation_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::Circulation);
 
 
 
@@ -135,9 +103,9 @@ mod tests {
         let mut subject = humanoid();
         subject.body.internal
             .iter_mut()
-            .find(|p| p.tags.contains(&BodyPartTag::breath))
+            .find(|p| p.tags.contains(&BodyPartTag::Breath))
             .unwrap()
-            .statuses.push(BodyPartStatus::paralised);
+            .statuses.push(BodyPartStatus::Paralised);
 
         recalculate_health(&mut subject);
         assert_eq!(subject.health_stats.bloodVolPtc, 1.0);
@@ -151,7 +119,7 @@ mod tests {
             .iter_mut()
             .find(|p| p.name.eq("Left Leg"))
             .unwrap()
-            .statuses.push(BodyPartStatus::missing);
+            .statuses.push(BodyPartStatus::Missing);
 
         recalculate_health(&mut subject);
         assert_eq!(subject.health_stats.bloodOxyPtc, 1.0);

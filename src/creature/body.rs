@@ -3,34 +3,34 @@ pub mod body {
 
     #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartStatus {
-        bruise,
-        cut,
-        wound,
-        paralised,
-        broken,
-        destroyed,
-        missing
+        Bruise,
+        Cut,
+        Wound,
+        Paralised,
+        Broken,
+        Destroyed,
+        Missing
     }
 
     #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartTag {
         // Core
-        breath,
-        thought,
-        nervous,
-        circulation,
+        Breath,
+        Thought,
+        Nervous,
+        Circulation,
         // Sense
-        sight,
-        hearing,
-        smell,
+        Sight,
+        Hearing,
+        Smell,
         // Action
-        fly,
-        grasp,
-        stance,
+        Fly,
+        Grasp,
+        Stance,
         // Location
-        left,
-        right,
-        joint
+        Left,
+        Right,
+        Joint
     }
     #[derive(PartialEq, Debug, Clone)]
     pub struct BodyPart {
@@ -71,6 +71,36 @@ pub mod body {
     }
     pub fn flatten_all(body: &BodyPart) -> Vec<&BodyPart> {
         return vec![flatten_children(&body), flatten_internals(&body)].concat();
+    }
+    pub fn get_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> Vec<&BodyPart> {
+        let parts = flatten_all(&body);
+        let mut output = vec![];
+        for part in parts {
+            if part.tags.contains(&tag) {
+                output.push(part);
+            }
+        }
+        return output;
+    }
+    pub fn count_functional_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
+        let parts = get_tagged_parts(&body, tag);
+        return parts
+            .iter()
+            .filter(|p| 
+                !(
+                    p.statuses.contains(&BodyPartStatus::Destroyed) || 
+                    p.statuses.contains(&BodyPartStatus::Paralised) ||
+                    p.statuses.contains(&BodyPartStatus::Missing) ||
+                    p.statuses.contains(&BodyPartStatus::Broken)
+                )
+            )
+            .count();
+    }
+    pub fn get_ratio_of_working_body_tags(body: &BodyPart, tag: BodyPartTag) -> f32 {
+        // TODO - rework this to work by part size ratios
+        let total_count = get_tagged_parts(body, tag).len();
+        let working_count = count_functional_tagged_parts(body, tag);
+        return (working_count as f32) / (total_count as f32);
     }
     pub fn random_weighted_part(body: &BodyPart) -> &BodyPart {
         let all_parts = flatten_children(&body);

@@ -37,7 +37,7 @@ pub mod humanoid {
                         },
                         BodyPart {
                             name: String::from("Left Arm"),
-                            tags: vec![BodyPartTag::left],
+                            tags: vec![BodyPartTag::Left, BodyPartTag::Grasp],
                             statuses: vec![],
                             internal: vec![],
                             children: vec![],
@@ -45,7 +45,7 @@ pub mod humanoid {
                         },
                         BodyPart {
                             name: String::from("Right Arm"),
-                            tags: vec![BodyPartTag::right],
+                            tags: vec![BodyPartTag::Right, BodyPartTag::Grasp],
                             statuses: vec![],
                             internal: vec![],
                             children: vec![],
@@ -53,7 +53,7 @@ pub mod humanoid {
                         },
                         BodyPart {
                             name: String::from("Left Leg"),
-                            tags: vec![BodyPartTag::left],
+                            tags: vec![BodyPartTag::Left, BodyPartTag::Stance],
                             statuses: vec![],
                             internal: vec![],
                             children: vec![],
@@ -61,7 +61,7 @@ pub mod humanoid {
                         },
                         BodyPart {
                             name: String::from("Right Leg"),
-                            tags: vec![BodyPartTag::right],
+                            tags: vec![BodyPartTag::Right, BodyPartTag::Stance],
                             statuses: vec![],
                             internal: vec![],
                             children: vec![],
