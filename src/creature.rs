@@ -24,37 +24,19 @@ pub mod creature {
         }
     }
 
-    fn calc_body_part_bleed_amount(part: &BodyPart, creature_size: i32) -> f32 {
-        let base_volume = (part.size as f32) / (creature_size as f32);
-        if part.statuses.contains(&BodyPartStatus::Destroyed) || 
-            part.statuses.contains(&BodyPartStatus::Missing) {
-            return base_volume;
-        }
-        if part.statuses.contains(&BodyPartStatus::Wound) {
-            return base_volume / 2.0;
-        }
-        if part.statuses.contains(&BodyPartStatus::Cut) {
-            return base_volume / 4.0;
-        }
-        return 0.0;
-    }
-
-    fn calc_creature_size(body: &BodyPart) -> i32 {
-        let parts = flatten_children(body);
-        let mut total = 0;
-        for part in parts {
-            total += part.size;
-        }
-        return total;
+    fn calc_body_part_bleed_amount(part: &BodyPart) -> f32 {
+        let base_volume = (sum_child_part_size_r(part) + sum_internal_part_size_r(part)) as f32;
+        let destroyed_vol = sum_status_size(&part, BodyPartStatus::Destroyed) as f32;
+        let missing_vol = sum_status_size(&part, BodyPartStatus::Missing) as f32;
+        let wound_vol = sum_status_size(&part, BodyPartStatus::Wound) as f32 / 2.0;
+        let cut_vol = sum_status_size(&part, BodyPartStatus::Cut) as f32 / 4.0;
+        
+        return (destroyed_vol + missing_vol + wound_vol + cut_vol) / base_volume;
     }
 
     pub fn recalculate_health<'a>(subject: &'a mut Creature) -> &'a Creature {
-        let creature_size = calc_creature_size(&subject.body);
-        
         let working_breath_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::Breath);
         let working_circulation_ratio = get_ratio_of_working_body_tags(&subject.body, BodyPartTag::Circulation);
-
-
 
         // multipler shouldn't be above one, and hearth failure is more severe than breath trouble / failure
         let breath_loss_factor = (1.0 - working_breath_ratio)
@@ -64,11 +46,8 @@ pub mod creature {
 
         subject.health_stats.bloodOxyPtc -=  breath_loss_factor.max(0.0);
 
-        let mut total_blood_loss = 0.0;
-        let parts = flatten_all(&subject.body);
-        for part in parts {
-            total_blood_loss += calc_body_part_bleed_amount(part, creature_size);
-        }
+        let total_blood_loss = calc_body_part_bleed_amount(&subject.body);
+        
         subject.health_stats.bloodVolPtc -= total_blood_loss;
         
 
@@ -113,13 +92,23 @@ mod tests {
     }
 
     #[test]
-    fn recalculate_health_blood_vol() {
+    fn recalculate_health_blood_vol_limb() {
         let mut subject = humanoid();
         subject.body.children
             .iter_mut()
             .find(|p| p.name.eq("Left Leg"))
             .unwrap()
             .statuses.push(BodyPartStatus::Missing);
+
+        recalculate_health(&mut subject);
+        assert_eq!(subject.health_stats.bloodOxyPtc, 1.0);
+        assert_eq!(subject.health_stats.bloodVolPtc < 1.0, true);
+    }
+
+    #[test]
+    fn recalculate_health_blood_vol_body() {
+        let mut subject = humanoid();
+        subject.body.statuses.push(BodyPartStatus::Wound);
 
         recalculate_health(&mut subject);
         assert_eq!(subject.health_stats.bloodOxyPtc, 1.0);

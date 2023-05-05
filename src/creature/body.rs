@@ -1,6 +1,8 @@
 pub mod body {
     use rand::Rng;
 
+    use crate::creature::humanoid::humanoid::humanoid;
+
     #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartStatus {
         Bruise,
@@ -42,130 +44,126 @@ pub mod body {
         pub size: i32,
     }
 
-    fn sum_part_size(parts: &Vec<&BodyPart>) -> i32 {
-        let mut total = 0;
-        for part in parts {
-            total += part.size;
+    pub fn sum_child_part_size_r(part: &BodyPart) -> i32 {
+        if part.children.len() == 0 {
+            return part.size;
         }
-        return total;
+        return part.size + part.children.iter().fold(0, |acc, p| acc + sum_child_part_size_r(p));
     }
-    pub fn flatten_children(body: &BodyPart) -> Vec<&BodyPart> {
-        if body.children.len() == 0 {
-            return vec![&body];
+    pub fn sum_internal_part_size_r(part: &BodyPart) -> i32 {
+        if part.internal.len() == 0 {
+            return part.size;
         }
-        let mut children: Vec<Vec<&BodyPart>> = vec![vec![body]];
-        for child in &body.children {
-            children.push(flatten_children(&child));
-        }
-
-        return children.concat();
+        return part.size + part.internal.iter().fold(0, |acc, p| acc + sum_internal_part_size_r(p));
     }
-    pub fn flatten_internals(body: &BodyPart) -> Vec<&BodyPart> {
-        let parts = flatten_children(&body);
-        let mut output: Vec<Vec<&BodyPart>> = vec![vec![]];
-        for part in parts {
-            let internal = part.internal.iter().collect();
-            output.push(internal);
-        }
-        return output.concat();
+    fn count_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
+        let local_count: usize = if body.tags.contains(&tag) { 1 } else {0};
+        let child_count = body.children.iter()
+            .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
+        let internal_count = body.internal.iter()
+            .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
+        return local_count + child_count + internal_count;
     }
-    pub fn flatten_all(body: &BodyPart) -> Vec<&BodyPart> {
-        return vec![flatten_children(&body), flatten_internals(&body)].concat();
+    fn sum_tagged_size(body: &BodyPart, tag: BodyPartTag) -> i32 {
+        let local_count: i32 = if body.tags.contains(&tag) { body.size } else {0};
+        let child_count = body.children.iter()
+            .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
+        let internal_count = body.internal.iter()
+            .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
+        return local_count + child_count + internal_count;
     }
-    pub fn get_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> Vec<&BodyPart> {
-        let parts = flatten_all(&body);
-        let mut output = vec![];
-        for part in parts {
-            if part.tags.contains(&tag) {
-                output.push(part);
-            }
-        }
-        return output;
+    fn count_tagged_parts_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> usize {
+        let local_count: usize = if body.tags.contains(&tag) && body.statuses.contains(&status) { 1 } else {0};
+        let child_count = body.children.iter()
+            .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
+        let internal_count = body.internal.iter()
+            .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
+        return local_count + child_count + internal_count;
     }
-    pub fn count_functional_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
-        let parts = get_tagged_parts(&body, tag);
-        return parts
-            .iter()
-            .filter(|p| 
-                !(
-                    p.statuses.contains(&BodyPartStatus::Destroyed) || 
-                    p.statuses.contains(&BodyPartStatus::Paralised) ||
-                    p.statuses.contains(&BodyPartStatus::Missing) ||
-                    p.statuses.contains(&BodyPartStatus::Broken)
-                )
-            )
-            .count();
+    pub fn sum_status_size(body: &BodyPart, status: BodyPartStatus) -> i32 {
+        let local_count: i32 = if  body.statuses.contains(&status) { body.size } else {0}; 
+        let child_count = body.children.iter()
+            .fold(0, |acc, p| acc + sum_status_size(p, status));
+        let internal_count = body.internal.iter()
+            .fold(0, |acc, p| acc + sum_status_size(p, status));
+        return local_count + child_count + internal_count;
+    }
+    fn sum_tagged_size_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> i32 {
+        let local_count: i32 = if body.tags.contains(&tag) && body.statuses.contains(&status) { body.size } else {0};
+        let child_count = body.children.iter()
+            .fold(0, |acc, p| acc + sum_tagged_size_with_status(p, tag, status));
+        let internal_count = body.internal.iter()
+            .fold(0, |acc, p| acc + sum_tagged_size_with_status(p, tag, status));
+        return local_count + child_count + internal_count;
     }
     pub fn get_ratio_of_working_body_tags(body: &BodyPart, tag: BodyPartTag) -> f32 {
-        // TODO - rework this to work by part size ratios
-        let total_count = get_tagged_parts(body, tag).len();
-        let working_count = count_functional_tagged_parts(body, tag);
-        return (working_count as f32) / (total_count as f32);
+        let total_size = sum_tagged_size(body, tag);
+        let destroyed_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Destroyed);
+        let missing_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Missing);
+        let paralised_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Paralised);
+        let broken_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Broken);
+        let working_size = total_size - (destroyed_size + missing_size + paralised_size + broken_size);
+        return (working_size as f32) / (total_size as f32);
     }
-    pub fn random_weighted_part(body: &BodyPart) -> &BodyPart {
-        let all_parts = flatten_children(&body);
-        let total_size = sum_part_size(&all_parts);
+    fn random_part_is_selected<'a>(body: &'a mut BodyPart, count: i32, roll: i32) -> (i32, Option<&'a mut BodyPart>) {
+        let c = count + body.size;
+        if c > roll {
+            return (c, Some(body));
+        }
+        return body.children.iter_mut()
+            .fold((c, None), |(acc_c, acc_r), p| if acc_r.is_none() { random_part_is_selected(p, acc_c, roll) } else {(c, acc_r)});
+    }
+    pub fn random_weighted_part<'a>(body: &'a mut BodyPart) -> &'a mut BodyPart {
+        if body.children.len() == 0 {
+            return body;
+        }
+        let total_size = sum_child_part_size_r(&body);
 
         let mut rng = rand::thread_rng();
         let r:f32 = rng.gen();
         let roll = (r * total_size as f32) as i32;
 
-        let mut t = 0;
-        for part in all_parts {
-            t += part.size;
-            if t > roll {
-                return part;
-            }
-        }
+        let (_, rtn) = random_part_is_selected(body, 0, roll);
 
-        return body;
+        return rtn.unwrap();
     }
-    pub fn random_weighted_part_with_internal(body: &BodyPart) -> &BodyPart {
-        let p = random_weighted_part(body);
-        if p.internal.len() == 0 {
-            return p;
-        }
+    // pub fn random_weighted_part_with_internal(body: &BodyPart) -> &BodyPart {
+    //     let p = random_weighted_part(body);
+    //     if p.internal.len() == 0 {
+    //         return p;
+    //     }
         
-        let internals: Vec<&BodyPart> = vec![body.internal.iter().collect(), vec![p]].concat();
-        let total_size = sum_part_size(&internals);
+    //     let internals: Vec<&BodyPart> = vec![body.internal.iter().collect(), vec![p]].concat();
+    //     let total_size = sum_part_size(&internals);
 
 
-        let mut rng = rand::thread_rng();
-        let r:f32 = rng.gen();
-        let roll = (r * total_size as f32) as i32;
+    //     let mut rng = rand::thread_rng();
+    //     let r:f32 = rng.gen();
+    //     let roll = (r * total_size as f32) as i32;
 
-        let mut t = 0;
-        for part in internals {
-            t += part.size;
-            if t > roll {
-                return part;
-            }
+    //     let mut t = 0;
+    //     for part in internals {
+    //         t += part.size;
+    //         if t > roll {
+    //             return part;
+    //         }
+    //     }
+
+    //     return body;
+    // }
+
+    #[test]
+    fn test_sum_child_part_size() {
+        use crate::creature::humanoid::humanoid::*;
+        let subject = humanoid();
+        assert_eq!(count_tagged_parts(&subject.body, BodyPartTag::Breath), 2);
+    }
+
+    #[test]
+    fn test_random_weighted_part() {
+        let mut subject = humanoid();
+        for _i in 0..=20 {
+            random_weighted_part(&mut subject.body);
         }
-
-        return body;
-    }
-
-    #[test]
-    fn flatten_children_humanoid() {
-        use crate::creature::humanoid::humanoid::*;
-        let subject = humanoid();
-        let flattened = flatten_children(&subject.body);
-        assert_eq!(flattened.len(), 6);
-    }
-
-    #[test]
-    fn flatten_internals_humanoid() {
-        use crate::creature::humanoid::humanoid::*;
-        let subject = humanoid();
-        let internals = flatten_internals(&subject.body);
-        assert_eq!(internals.len(), 9);
-    }
-
-    #[test]
-    fn flatten_all_humanoid() {
-        use crate::creature::humanoid::humanoid::*;
-        let subject = humanoid();
-        let all = flatten_all(&subject.body);
-        assert_eq!(all.len(), 15);
     }
 }

@@ -37,8 +37,9 @@ pub mod combat {
         if !is_target_hit(&target) {
             return target;
         }
-        // TODO - Figure out how to get damage / statuses to stack onto 
-        //      a body part
+        let ref_part = random_weighted_part(&mut target.body);
+        resolve_damage_against_part(ref_part, &STAND_IN_WEAPON);
+
         println!("{:#?}", target);
         return target;
     }
@@ -46,8 +47,10 @@ pub mod combat {
     #[test]
     fn resolve_damage_test() {
         use crate::creature::humanoid::humanoid::*;
-        for _i in 0..20 {
-            resolve_attack_against_creature(&mut humanoid(), &STAND_IN_WEAPON);
-        }
+        let mut subject = humanoid();
+        resolve_attack_against_creature(&mut subject, &STAND_IN_WEAPON);
+        recalculate_health(&mut subject);
+        println!("{:#?}", subject);
+        println!("{:#?}", subject.health_stats);
     }
 }
