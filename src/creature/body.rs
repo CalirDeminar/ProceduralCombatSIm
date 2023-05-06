@@ -41,22 +41,22 @@ pub mod body {
         pub statuses: Vec<BodyPartStatus>,
         pub internal: Vec<BodyPart>,
         pub children: Vec<BodyPart>,
-        pub size: i32,
+        pub size: u32,
     }
 
-    pub fn sum_child_part_size_r(part: &BodyPart) -> i32 {
+    pub fn sum_child_part_size_r(part: &BodyPart) -> u32 {
         if part.children.len() == 0 {
             return part.size;
         }
         return part.size + part.children.iter().fold(0, |acc, p| acc + sum_child_part_size_r(p));
     }
-    pub fn sum_internal_part_size_r(part: &BodyPart) -> i32 {
+    pub fn sum_internal_part_size_r(part: &BodyPart) -> u32 {
         if part.internal.len() == 0 {
             return part.size;
         }
         return part.size + part.internal.iter().fold(0, |acc, p| acc + sum_internal_part_size_r(p));
     }
-    fn count_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
+    pub fn count_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
         let local_count: usize = if body.tags.contains(&tag) { 1 } else {0};
         let child_count = body.children.iter()
             .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
@@ -64,15 +64,15 @@ pub mod body {
             .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
         return local_count + child_count + internal_count;
     }
-    fn sum_tagged_size(body: &BodyPart, tag: BodyPartTag) -> i32 {
-        let local_count: i32 = if body.tags.contains(&tag) { body.size } else {0};
+    fn sum_tagged_size(body: &BodyPart, tag: BodyPartTag) -> u32 {
+        let local_count: u32 = if body.tags.contains(&tag) { body.size } else {0};
         let child_count = body.children.iter()
             .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
         let internal_count = body.internal.iter()
             .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
         return local_count + child_count + internal_count;
     }
-    fn count_tagged_parts_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> usize {
+    pub fn count_tagged_parts_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> usize {
         let local_count: usize = if body.tags.contains(&tag) && body.statuses.contains(&status) { 1 } else {0};
         let child_count = body.children.iter()
             .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
@@ -80,16 +80,16 @@ pub mod body {
             .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
         return local_count + child_count + internal_count;
     }
-    pub fn sum_status_size(body: &BodyPart, status: BodyPartStatus) -> i32 {
-        let local_count: i32 = if  body.statuses.contains(&status) { body.size } else {0}; 
+    pub fn sum_status_size(body: &BodyPart, status: BodyPartStatus) -> u32 {
+        let local_count: u32 = if  body.statuses.contains(&status) { body.size } else {0}; 
         let child_count = body.children.iter()
             .fold(0, |acc, p| acc + sum_status_size(p, status));
         let internal_count = body.internal.iter()
             .fold(0, |acc, p| acc + sum_status_size(p, status));
         return local_count + child_count + internal_count;
     }
-    fn sum_tagged_size_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> i32 {
-        let local_count: i32 = if body.tags.contains(&tag) && body.statuses.contains(&status) { body.size } else {0};
+    fn sum_tagged_size_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> u32 {
+        let local_count: u32 = if body.tags.contains(&tag) && body.statuses.contains(&status) { body.size } else {0};
         let child_count = body.children.iter()
             .fold(0, |acc, p| acc + sum_tagged_size_with_status(p, tag, status));
         let internal_count = body.internal.iter()
@@ -105,7 +105,7 @@ pub mod body {
         let working_size = total_size - (destroyed_size + missing_size + paralised_size + broken_size);
         return (working_size as f32) / (total_size as f32);
     }
-    fn random_part_is_selected<'a>(body: &'a mut BodyPart, count: i32, roll: i32) -> (i32, Option<&'a mut BodyPart>) {
+    fn random_part_is_selected<'a>(body: &'a mut BodyPart, count: u32, roll: u32) -> (u32, Option<&'a mut BodyPart>) {
         let c = count + body.size;
         if c > roll {
             return (c, Some(body));
@@ -121,7 +121,7 @@ pub mod body {
 
         let mut rng = rand::thread_rng();
         let r:f32 = rng.gen();
-        let roll = (r * total_size as f32) as i32;
+        let roll = (r * total_size as f32) as u32;
 
         let (_, rtn) = random_part_is_selected(body, 0, roll);
 
@@ -139,7 +139,7 @@ pub mod body {
 
     //     let mut rng = rand::thread_rng();
     //     let r:f32 = rng.gen();
-    //     let roll = (r * total_size as f32) as i32;
+    //     let roll = (r * total_size as f32) as u32;
 
     //     let mut t = 0;
     //     for part in internals {

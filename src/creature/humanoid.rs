@@ -4,9 +4,9 @@ pub mod humanoid {
     use crate::creature::creature::*;
 
 
-    const LIMB_SIZE: i32 = 400;
-    const HEAD_SIZE: i32 = 300;
-    const BODY_SIZE: i32 = 2000;
+    const LIMB_SIZE: u32 = 400;
+    const HEAD_SIZE: u32 = 300;
+    const BODY_SIZE: u32 = 2000;
 
     pub fn humanoid() -> Creature {
         return Creature {
