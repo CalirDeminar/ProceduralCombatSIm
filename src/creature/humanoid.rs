@@ -8,6 +8,27 @@ pub mod humanoid {
     const HEAD_SIZE: u32 = 300;
     const BODY_SIZE: u32 = 2000;
 
+    fn limb_2pt(name: String, side: BodyPartTag, tags: Vec<BodyPartTag>) -> BodyPart {
+        let prefix = if side == BodyPartTag::Left {"Left "} else if side == BodyPartTag::Right{"Right "} else {""};
+        return BodyPart {
+            name: format!("{}Upper {}", prefix, name),
+            tags: vec![side],
+            statuses: vec![],
+            internal: vec![],
+            children: vec![
+                BodyPart {
+                    name: format!("{}Lower {}", prefix, name),
+                    tags: vec![vec![side], tags].concat(),
+                    statuses: vec![],
+                    internal: vec![],
+                    children: vec![],
+                    size: LIMB_SIZE / 2
+                }
+            ],
+            size: LIMB_SIZE/2
+        }
+    }
+
     pub fn humanoid() -> Creature {
         return Creature {
             species: String::from("Human"),
@@ -35,38 +56,10 @@ pub mod humanoid {
                             children: vec![],
                             size: HEAD_SIZE
                         },
-                        BodyPart {
-                            name: String::from("Left Arm"),
-                            tags: vec![BodyPartTag::Left, BodyPartTag::Grasp],
-                            statuses: vec![],
-                            internal: vec![],
-                            children: vec![],
-                            size: LIMB_SIZE
-                        },
-                        BodyPart {
-                            name: String::from("Right Arm"),
-                            tags: vec![BodyPartTag::Right, BodyPartTag::Grasp],
-                            statuses: vec![],
-                            internal: vec![],
-                            children: vec![],
-                            size: LIMB_SIZE
-                        },
-                        BodyPart {
-                            name: String::from("Left Leg"),
-                            tags: vec![BodyPartTag::Left, BodyPartTag::Stance],
-                            statuses: vec![],
-                            internal: vec![],
-                            children: vec![],
-                            size: LIMB_SIZE
-                        },
-                        BodyPart {
-                            name: String::from("Right Leg"),
-                            tags: vec![BodyPartTag::Right, BodyPartTag::Stance],
-                            statuses: vec![],
-                            internal: vec![],
-                            children: vec![],
-                            size: LIMB_SIZE
-                        }
+                        limb_2pt(String::from("Arm"), BodyPartTag::Left, vec![BodyPartTag::Grasp]),
+                        limb_2pt(String::from("Arm"), BodyPartTag::Right, vec![BodyPartTag::Grasp]),
+                        limb_2pt(String::from("Leg"), BodyPartTag::Right, vec![BodyPartTag::Stance]),
+                        limb_2pt(String::from("Leg"), BodyPartTag::Left, vec![BodyPartTag::Stance]),
                     ]
                 ].concat(),
                 size: BODY_SIZE

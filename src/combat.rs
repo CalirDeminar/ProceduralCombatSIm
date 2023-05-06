@@ -42,7 +42,7 @@ pub mod combat {
 
         let attacker_blood_modifier = attacker.health_stats.blood_vol_ptc.min(attacker.health_stats.blood_oxy_ptc);
 
-        let attacker_hit_modifier = attacker_manipulation_modifier * attacker_sight_modifier * attacker_sight_modifier;
+        let attacker_hit_modifier = attacker_manipulation_modifier * attacker_sight_modifier * attacker_blood_modifier;
         let hit_chance = BASE_HIT_CHANCE * (2.0 - target_mobility_modifier) * attacker_hit_modifier;
         return r < hit_chance;
     }
