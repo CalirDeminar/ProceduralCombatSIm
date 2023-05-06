@@ -113,6 +113,14 @@ pub mod body {
         return body.children.iter_mut()
             .fold((c, None), |(acc_c, acc_r), p| if acc_r.is_none() { random_part_is_selected(p, acc_c, roll) } else {(c, acc_r)});
     }
+    fn random_internal_is_selected<'a>(body: &'a mut BodyPart, count: u32, roll: u32) -> (u32, Option<&'a mut BodyPart>) {
+        let c = count + body.size;
+        if c > roll {
+            return (c, Some(body));
+        }
+        return body.internal.iter_mut()
+            .fold((c, None), |(acc_c, acc_r), p| if acc_r.is_none() { random_part_is_selected(p, acc_c, roll) } else {(c, acc_r)});
+    }
     pub fn random_weighted_part<'a>(body: &'a mut BodyPart) -> &'a mut BodyPart {
         if body.children.len() == 0 {
             return body;
@@ -126,6 +134,20 @@ pub mod body {
         let (_, rtn) = random_part_is_selected(body, 0, roll);
 
         return rtn.unwrap();
+    }
+    pub fn random_weighted_internal<'a>(body: &'a mut BodyPart) -> Option<&'a mut BodyPart> {
+        if body.internal.len() == 0 {
+            return None;
+        }
+        let internal_size = sum_internal_part_size_r(body);
+
+        let mut rng = rand::thread_rng();
+        let r:f32 = rng.gen();
+        let roll = (r * internal_size as f32) as u32;
+
+        let (_, rtn) = random_part_is_selected(body, 0, roll);
+
+        return rtn;    
     }
     // pub fn random_weighted_part_with_internal(body: &BodyPart) -> &BodyPart {
     //     let p = random_weighted_part(body);

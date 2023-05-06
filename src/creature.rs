@@ -24,26 +24,26 @@ pub mod creature {
 
     fn propegate_statuses<'a>(part: &'a mut BodyPart) {
         for p in &mut part.children {
-            if part.statuses.contains(&BodyPartStatus::Destroyed) {
+            if part.statuses.contains(&BodyPartStatus::Destroyed) && !p.statuses.contains(&BodyPartStatus::Destroyed) {
                 p.statuses.push(BodyPartStatus::Destroyed);
             }
-            if part.statuses.contains(&BodyPartStatus::Missing) {
+            if part.statuses.contains(&BodyPartStatus::Missing) && !p.statuses.contains(&BodyPartStatus::Missing) {
                 p.statuses.push(BodyPartStatus::Missing);
             }
-            if part.statuses.contains(&BodyPartStatus::Paralised) {
+            if part.statuses.contains(&BodyPartStatus::Paralised) && !p.statuses.contains(&BodyPartStatus::Paralised) {
                 p.statuses.push(BodyPartStatus::Paralised)
             }
 
             propegate_statuses(p);
         }
         for p in &mut part.internal {
-            if part.statuses.contains(&BodyPartStatus::Destroyed) {
+            if part.statuses.contains(&BodyPartStatus::Destroyed) && !p.statuses.contains(&BodyPartStatus::Destroyed) {
                 p.statuses.push(BodyPartStatus::Destroyed);
             }
-            if part.statuses.contains(&BodyPartStatus::Missing) {
+            if part.statuses.contains(&BodyPartStatus::Missing) && !p.statuses.contains(&BodyPartStatus::Missing) {
                 p.statuses.push(BodyPartStatus::Missing);
             }
-            if part.statuses.contains(&BodyPartStatus::Paralised) {
+            if part.statuses.contains(&BodyPartStatus::Paralised) && !p.statuses.contains(&BodyPartStatus::Paralised) {
                 p.statuses.push(BodyPartStatus::Paralised)
             }
 
@@ -72,11 +72,11 @@ pub mod creature {
             .min(1.0)
             .max(0.0) * BREATH_LOSS_RATE;
 
-        subject.health_stats.blood_oxy_ptc -=  breath_loss_factor.max(0.0);
+        subject.health_stats.blood_oxy_ptc = (subject.health_stats.blood_oxy_ptc - breath_loss_factor.max(0.0)).min(1.0).max(0.0);
 
         let total_blood_loss = calc_body_part_bleed_amount(&subject.body);
         
-        subject.health_stats.blood_vol_ptc -= total_blood_loss;
+        subject.health_stats.blood_vol_ptc = (subject.health_stats.blood_vol_ptc - total_blood_loss).min(1.0).max(0.0);
 
         let has_brain =count_tagged_parts(&subject.body, BodyPartTag::Thought) > 0;
 
