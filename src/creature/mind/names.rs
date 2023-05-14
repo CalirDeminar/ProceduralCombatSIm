@@ -52,10 +52,10 @@ pub mod names {
             let line = l.unwrap();
             let mut gender = Gender::Ambiguous;
             let gender_str = line.get(1).unwrap().trim_start().to_lowercase();
-            if gender_str.eq("male") {
+            if gender_str.eq("m") {
                 gender = Gender::Male;
             }
-            if gender_str.eq("female") {
+            if gender_str.eq("f") {
                 gender = Gender::Female;
             }
             output.push(NameDefinition{
