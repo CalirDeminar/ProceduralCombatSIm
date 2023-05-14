@@ -6,7 +6,9 @@ pub mod relations {
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
-    const PARTNER_CHANCE: f32 = 0.5;
+    const PARTNER_CHANCE_GENERAL: f32 = 0.5;
+    const PARTNER_MARRIAGE_RATE: f32 = 0.5;
+    const PARTNER_SPLIT_RATE: f32 = 0.2;
     const HOMOSEXUALITY_CHANCE: f32 = 0.2;
 
     const PARENT_PRESENCE_CHANCE: f32 = 0.3;
@@ -44,11 +46,27 @@ pub mod relations {
         let mut rng = rand::thread_rng();
         let mut output: Vec<Mind> = Vec::new();
         for mind in population {
-            let has_partner = rng.gen::<f32>() > PARTNER_CHANCE;
+            let has_partner = rng.gen::<f32>() > PARTNER_CHANCE_GENERAL;
             if !has_partner {
                 output.push(mind.clone());
                 continue;
             } else {
+                let married = rng.gen::<f32>() < PARTNER_MARRIAGE_RATE;
+                let split = rng.gen::<f32>() < PARTNER_SPLIT_RATE;
+                let verb: RelationVerb;
+                if married {
+                    if split {
+                        verb = RelationVerb::ExSpouse;
+                    } else {
+                        verb = RelationVerb::Spouse;
+                    }
+                } else {
+                    if split {
+                        verb = RelationVerb::ExPartner
+                    } else {
+                        verb = RelationVerb::Partner;
+                    }
+                }
                 let partner_gender = gen_partner_gender(&mind.gender);
                 let mut target = mind.clone();
                 let distribution = Normal::new(mind.age.clone() as f32, 4.0).unwrap();
@@ -56,9 +74,9 @@ pub mod relations {
                     &name_dict, 
                     &partner_gender, 
                     distribution.sample(&mut rand::thread_rng()) as u32, 
-                    vec![(RelationVerb::Partner, target.id.clone())]
+                    vec![(verb.clone(), target.id.clone())]
                 );
-                target.relations.push((RelationVerb::Partner, relation.id.clone()));
+                target.relations.push((verb.clone(), relation.id.clone()));
                 assert!(relation.relations.iter().any(|(_,m)| m==&target.id));
                 output.push(target);
                 output.push(relation);

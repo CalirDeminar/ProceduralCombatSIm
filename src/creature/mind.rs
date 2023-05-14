@@ -133,7 +133,7 @@ pub mod mind {
     pub fn output_population(size: usize) {
         let pop = generate_population(size);
         // let output = format!("{:#?}", pop);
-        let mut file = File::create("./export.json").unwrap();
+        let mut file = File::create("./export.txt").unwrap();
         let pop_log = print_population(&pop);
         file.write_all(pop_log.into_bytes().as_slice()).unwrap();
     }
