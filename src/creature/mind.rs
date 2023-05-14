@@ -1,6 +1,8 @@
 pub mod names;
 pub mod relations;
 pub mod mind {
+    use std::{fs::File, io::Write};
+
     use rand::Rng;
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
@@ -61,27 +63,32 @@ pub mod mind {
         }
         return format!("Missing ID: {}", id);
     }
-    fn print_mind(mind: &Mind, population: &Vec<Mind>) {
-        println!("==========");
+    fn print_mind(mind: &Mind, population: &Vec<Mind>) -> String {
+        let mut output = String::from("");
+        output.push_str("===========\n");
         let relations: Vec<(&RelationVerb, String)> = mind.relations.iter().map(|(verb, id)| (verb, get_name_from_id(&id, &population))).collect();
         // println!("ID: {}", mind.id);
-        println!("Name: {} {}", mind.first_name, mind.last_name);
-        println!("Gender: {:?}", mind.gender);
-        println!("Age: {}", mind.age);
-        println!("Relations: ");
+        output.push_str(&format!("Name: {} {}\n", mind.first_name, mind.last_name));
+        output.push_str(&format!("Gender: {:?}\n", mind.gender));
+        output.push_str(&format!("Age: {}\n", mind.age));
+        output.push_str(&format!("Relations:\n"));
         if relations.len() < 1 {
             println!("  None");
+            output.push_str(&format!("  None\n"));
         } else {
             for (verb, name) in relations {
-                println!("  {:?}: {}", verb, name);
+                output.push_str(&format!("  {:?}: {}\n", verb, name));
             }
         }
-        println!("==========");
+        output.push_str(&format!("==========\n"));
+        return output;
     }
-    fn print_population(population: &Vec<Mind>) {
+    fn print_population(population: &Vec<Mind>) -> String {
+        let mut output = String::from("");
         for mind in population {
-            print_mind(&mind, &population);
+            output.push_str(&print_mind(&mind, &population));
         }
+        return output;
     }
 
     pub fn random_char<'a>(name_dict: &NameDictionary) -> Mind {
@@ -123,6 +130,14 @@ pub mod mind {
         return population
     }
 
+    pub fn output_population(size: usize) {
+        let pop = generate_population(size);
+        // let output = format!("{:#?}", pop);
+        let mut file = File::create("./export.json").unwrap();
+        let pop_log = print_population(&pop);
+        file.write_all(pop_log.into_bytes().as_slice()).unwrap();
+    }
+
     // relation generation
 
     // generate core population
@@ -133,7 +148,7 @@ pub mod mind {
 
     #[test]
     fn generate_population_test() {
-        let population = generate_population(50);
-        print_population(&population);
+        // let population = generate_population(50);
+        output_population(50);
     }
 }
