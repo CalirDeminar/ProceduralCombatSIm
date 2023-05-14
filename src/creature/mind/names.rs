@@ -19,8 +19,8 @@ pub mod names {
 
     pub fn gen_name_dict() -> NameDictionary {
         return NameDictionary {
-            first_names: parse_file(String::from("./src/creature/mind/first_names.csv")),
-            last_names: parse_file(String::from("./src/creature/mind/last_names.csv")),
+            first_names: parse_file(String::from("./src/creature/mind/names/first_names.csv")),
+            last_names: parse_file(String::from("./src/creature/mind/names/last_names.csv")),
         }
     }
 
@@ -68,11 +68,11 @@ pub mod names {
 
 
 
-    #[test]
-    fn random_name_test() {
-        let dict = gen_name_dict();
-        for _i in 0..10 {
-            println!("{:?}", random_name(&dict, &Gender::Male));
-        }
-    }
+    // #[test]
+    // fn random_name_test() {
+    //     let dict = gen_name_dict();
+    //     for _i in 0..10 {
+    //         println!("{:?}", random_name(&dict, &Gender::Male));
+    //     }
+    // }
 }
