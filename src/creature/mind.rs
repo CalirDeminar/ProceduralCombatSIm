@@ -5,7 +5,7 @@ pub mod mind {
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
-    use super::{names::names::{NameDictionary, random_name, gen_name_dict}, relations::relations::{add_partners_to_population, add_parents_to_population}};
+    use super::{names::names::{NameDictionary, random_name, gen_name_dict}, relations::relations::{add_partners_to_population, add_parents_to_population, link_friends_within_population}};
     #[derive(PartialEq, Debug, Clone)]
     pub enum RelationVerb {
         // family
@@ -119,6 +119,7 @@ pub mod mind {
         let mut population = generate_base_population(size, &name_dict);
         population = add_partners_to_population(population, &name_dict);
         population = add_parents_to_population(population, &name_dict);
+        population = link_friends_within_population(population);
         return population
     }
 

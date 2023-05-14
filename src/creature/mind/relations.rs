@@ -2,6 +2,7 @@ pub mod relations {
     use crate::creature::mind::mind::*;
     use crate::creature::mind::names::names::*;
     use rand::Rng;
+    use rand::seq::SliceRandom;
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
@@ -9,6 +10,11 @@ pub mod relations {
     const HOMOSEXUALITY_CHANCE: f32 = 0.2;
 
     const PARENT_PRESENCE_CHANCE: f32 = 0.3;
+
+    const FRIEND_OUTGOING_MAX: f32 = 3.0;
+    const FRIEND_MULTIPLIER_SAME_GENDER: f32 = 0.66;
+    const FRIEND_MULTIPLER_DIFFERENT_GENDER: f32 = 0.33;
+    const FRIEND_RATE: f32 = 0.01;
 
     fn gen_mind_with_gender_and_relation(name_dict: &NameDictionary, gender: &Gender, age: u32, relations: Vec<Relation>) -> Mind{
         let (first_name, last_name) = random_name(&name_dict, &gender);
@@ -103,6 +109,50 @@ pub mod relations {
                     output.push(parent_two);
                 }
                 output.push(mind_m);
+            }
+        }
+        return output;
+    }
+
+    fn match_friend(mind_1: &Mind, mind_2: &Mind) -> bool {
+        let mut rng = rand::thread_rng();
+        let roll: f32 = rng.gen();
+        let gender_modifier: f32;
+        if mind_1.gender.eq(&mind_2.gender) {
+            gender_modifier = FRIEND_MULTIPLIER_SAME_GENDER;
+        } else {
+            gender_modifier = FRIEND_MULTIPLER_DIFFERENT_GENDER;
+        }
+        let age_gap_modifier = 1.0/((mind_1.age.abs_diff(mind_2.age) as f32)*5.0).min(1.0).max(0.0);
+        let mind_1_knows_2 = mind_1.relations.iter().any(|(_r, id)| id.eq(&mind_2.id));
+        return !mind_1_knows_2 && roll > (FRIEND_RATE*gender_modifier*age_gap_modifier);
+    }
+
+    pub fn link_friends_within_population(population: Vec<Mind>) -> Vec<Mind> {
+        let mut rng = rand::thread_rng();
+        let mut population_ref = population.clone();
+        let mut output: Vec<Mind> = Vec::new();
+        // add outcoming friendships to the population
+        for mind in population {
+            let friend_count = (rng.gen::<f32>()*FRIEND_OUTGOING_MAX) as u32;
+            let mut mind_m = mind.clone();
+            for _i in 0..friend_count {
+                let match_f = population_ref.iter().find(|m| match_friend(&mind_m, m));
+                if match_f.is_some() {
+                    mind_m.relations.push((RelationVerb::Friend, match_f.unwrap().id.clone()));
+                }
+                population_ref.shuffle(&mut rng);
+            }
+            output.push(mind_m);
+        }
+        // reflect those outgoing friendships back
+        let output_ref = output.clone();
+        for mind in output.iter_mut() {
+            let incoming_friends: Vec<&Mind> = output_ref.iter().filter(
+                |m| m.relations.iter().any(|(verb, id)| verb.eq(&RelationVerb::Friend) && id.eq(&mind.id))
+            ).collect();
+            for friend in incoming_friends {
+                mind.relations.push((RelationVerb::Friend, friend.id.clone()));
             }
         }
         return output;
