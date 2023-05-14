@@ -1,6 +1,7 @@
 pub mod organs;
 pub mod humanoid;
 pub mod body;
+pub mod mind;
 pub mod creature {
     use crate::creature::body::body::*;
 
