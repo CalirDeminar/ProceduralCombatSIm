@@ -24,7 +24,7 @@ pub mod names {
         }
     }
 
-    fn random_name_for_gender<'a>(input: &'a Vec<NameDefinition>, gender: &Gender) -> &'a str {
+    fn random_name_for_gender<'a>(input: &'a Vec<NameDefinition>, gender: &Gender) -> String {
         let mut working: Vec<&'a NameDefinition> = vec![];
         for name in input {
             if name.gender.eq(&Gender::Ambiguous) {
@@ -37,10 +37,10 @@ pub mod names {
         let mut rng = rand::thread_rng();
         let roll: f32 = rng.gen();
         let result = working[(roll * working.len() as f32) as usize];
-        return &result.name;
+        return String::from(&result.name);
     }
 
-    pub fn random_name<'a>(dict: &'a NameDictionary, gender: &Gender) -> (&'a str, &'a str) {
+    pub fn random_name<'a>(dict: &'a NameDictionary, gender: &Gender) -> (String, String) {
         return (random_name_for_gender(&dict.first_names, &gender), random_name_for_gender(&dict.last_names, &gender));
     }
 
