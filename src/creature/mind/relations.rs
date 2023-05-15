@@ -6,6 +6,29 @@ pub mod relations {
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
+    #[derive(PartialEq, Debug, Clone)]
+    pub enum RelationVerb {
+        // family
+        Parent,
+        Child,
+        Partner,
+        ExPartner,
+        Spouse,
+        ExSpouse,
+        // business
+        Employer,
+        Employee,
+        Coleague,
+        // social
+        Acquaintance,
+        Friend,
+        CloseFriend,
+        Grudge,
+        // religion
+        Diety,
+        Priest,
+    }
+
     const PARTNER_CHANCE_GENERAL: f32 = 0.5;
     const PARTNER_MARRIAGE_RATE: f32 = 0.5;
     const PARTNER_SPLIT_RATE: f32 = 0.2;

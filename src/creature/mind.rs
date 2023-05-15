@@ -7,29 +7,9 @@ pub mod mind {
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
-    use super::{names::names::{NameDictionary, random_name, gen_name_dict}, relations::relations::{add_partners_to_population, add_parents_to_population, link_friends_within_population}};
-    #[derive(PartialEq, Debug, Clone)]
-    pub enum RelationVerb {
-        // family
-        Parent,
-        Child,
-        Partner,
-        ExPartner,
-        Spouse,
-        ExSpouse,
-        // business
-        Employer,
-        Employee,
-        Coleague,
-        // social
-        Acquaintance,
-        Friend,
-        CloseFriend,
-        Grudge,
-        // religion
-        Diety,
-        Priest,
-    }
+    use super::names::names::*;
+    use super::relations::relations::*;
+
 
     #[derive(PartialEq, Debug, Clone)]
     pub enum Gender {
@@ -73,7 +53,6 @@ pub mod mind {
         output.push_str(&format!("Age: {}\n", mind.age));
         output.push_str(&format!("Relations:\n"));
         if relations.len() < 1 {
-            println!("  None");
             output.push_str(&format!("  None\n"));
         } else {
             for (verb, name) in relations {
@@ -149,6 +128,6 @@ pub mod mind {
     #[test]
     fn generate_population_test() {
         // let population = generate_population(50);
-        output_population(50);
+        output_population(500);
     }
 }
