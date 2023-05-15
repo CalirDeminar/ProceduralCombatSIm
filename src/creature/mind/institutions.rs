@@ -71,6 +71,24 @@ pub mod institutions {
         return output;
     }
 
+    pub fn gen_food_service(name_dict: &NameDictionary) -> String {
+        let suffixes = vec![
+            // non-specific
+            "Bar",
+            "Cafe",
+            "Bakers",
+            "Inn",
+            "Kitchen",
+            // specific
+            "Grill",
+            "Kebab",
+            "Pizza",
+            "Coffee",
+            "Brasserie"
+        ];
+        return String::from("");
+    }
+
     #[test]
     fn generate_population_institutions_test() {
         let name_dict = gen_name_dict();
