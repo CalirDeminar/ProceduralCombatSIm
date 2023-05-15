@@ -1,5 +1,6 @@
 pub mod names;
 pub mod relations;
+pub mod institutions;
 pub mod mind {
     use std::{fs::File, io::Write};
 
