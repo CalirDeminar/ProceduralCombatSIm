@@ -71,8 +71,8 @@ pub mod data_parser {
                 }
             }
         }
-        write_data(&first_names, String::from("./src/creature/mind/english_first_names.csv"));
-        write_data(&last_names, String::from("./src/creature/mind/english_last_names.csv"));
+        write_data(&first_names, String::from("./src/data/names/english_first_names.csv"));
+        write_data(&last_names, String::from("./src/data/names/english_last_names.csv"));
     }
 
     // #[test]

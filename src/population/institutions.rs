@@ -59,7 +59,7 @@ pub mod institutions {
         });
     }
 
-    pub fn generate_population_institutions(name_dict: &NameDictionary) -> Vec<Institution>{
+    pub fn generate_public_institutions(name_dict: &NameDictionary) -> Vec<Institution>{
         let mut output: Vec<Institution> = Vec::new();
         for i in PUBLIC_INSTITUTES {
             let (_, prefix) = random_mind_name(&name_dict, &Gender::Ambiguous);
@@ -73,11 +73,27 @@ pub mod institutions {
     }
 
     fn gen_food_service(name_dict: &NameDictionary) -> String {
+        let mut rng = rand::thread_rng();
+        let roll: f32 = rng.gen();
+        let prefix = if roll < 0.5 { random_name(&name_dict.location_prefixes) } else { String::from("")};
         return String::from(format!(
                 "{} {} {}", 
-                &random_name(&name_dict.location_prefixes), 
+                &prefix, 
                 &random_name(&name_dict.last_names),
                 &random_name(&name_dict.food_service_suffixes)
+            )
+        );
+    }
+
+    fn gen_specialist_retail(name_dict: &NameDictionary) -> String {
+        let mut rng = rand::thread_rng();
+        let roll: f32 = rng.gen();
+        let prefix = if roll < 0.5 { random_name(&name_dict.location_prefixes) } else { String::from("")};
+        return String::from(format!(
+                "{} {} {}", 
+                &prefix, 
+                &random_name(&name_dict.last_names),
+                &random_name(&name_dict.specialist_retail_suffixes)
             )
         );
     }
@@ -94,6 +110,44 @@ pub mod institutions {
         return output;
     }
 
+    pub fn generate_specialist_retailers(i: usize, name_dict: &NameDictionary) -> Vec<Institution> {
+        let mut output: Vec<Institution> = Vec::new();
+        for _i in 0..i {
+            output.push( Institution {
+                name: gen_specialist_retail(&name_dict),
+                public: false,
+                institute_type: InstituteType::SpecialistRetail
+            });
+        }
+        return output;
+    }
+
+    pub fn generate_population_institutions(size: usize) -> Vec<Institution> {
+        let name_dict = gen_name_dict();
+        let mut output: Vec<Institution> = Vec::new();
+        let mut rng = rand::thread_rng();
+        for i in generate_public_institutions(&name_dict) {
+            output.push(i);
+        }
+        for _i in 0..((size as i32 - output.len() as i32).max(1)) {
+            let roll: f32 = rng.gen();
+            if roll > 0.5 {
+                output.push(Institution { 
+                    name: gen_food_service(&name_dict), 
+                    public: false, 
+                    institute_type: InstituteType::FoodService 
+                });
+            } else {
+                output.push(Institution { 
+                    name: gen_specialist_retail(&name_dict), 
+                    public: false, 
+                    institute_type: InstituteType::SpecialistRetail 
+                });
+            }
+        } 
+        return output;
+    }
+
     // #[test]
     // fn generate_population_institutions_test() {
     //     let name_dict = gen_name_dict();
@@ -101,9 +155,7 @@ pub mod institutions {
     // }
 
     #[test]
-    fn generate_restaurants_test() {
-        let name_dict = gen_name_dict();
-        // println!("{:#?}", &name_dict);
-        println!("{:#?}", generate_restaurants(10, &name_dict));
+    fn gen_institutions_test() {
+        println!("{:#?}", generate_population_institutions(20));
     }
 }

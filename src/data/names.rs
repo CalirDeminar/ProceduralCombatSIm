@@ -17,14 +17,17 @@ pub mod names {
         pub last_names: Vec<NameDefinition>,
         pub food_service_suffixes: Vec<NameDefinition>,
         pub location_prefixes: Vec<NameDefinition>,
+        pub specialist_retail_suffixes: Vec<NameDefinition>,
+
     }
 
     pub fn gen_name_dict() -> NameDictionary {
         return NameDictionary {
-            first_names: parse_file(String::from("./src/creature/mind/names/english_first_names.csv")),
-            last_names: parse_file(String::from("./src/creature/mind/names/english_last_names.csv")),
-            food_service_suffixes: parse_file(String::from("./src/creature/mind/names/food_service_suffixes.csv")),
-            location_prefixes: parse_file(String::from("./src/creature/mind/names/location_prefixes.csv"))
+            first_names: parse_file(String::from("./src/data/names/english_first_names.csv")),
+            last_names: parse_file(String::from("./src/data/names/english_last_names.csv")),
+            food_service_suffixes: parse_file(String::from("./src/data/names/food_service_suffixes.csv")),
+            location_prefixes: parse_file(String::from("./src/data/names/location_prefixes.csv")),
+            specialist_retail_suffixes: parse_file(String::from("./src/data/names/specialist_retail_suffixes.csv"))
         }
     }
 
