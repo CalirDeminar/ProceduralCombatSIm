@@ -1,6 +1,6 @@
 pub mod relations {
     use crate::creature::mind::mind::*;
-    use crate::creature::mind::names::names::*;
+    use crate::data::names::names::*;
     use rand::Rng;
     use rand::seq::SliceRandom;
     use rand_distr::{Normal, Distribution};
@@ -42,7 +42,7 @@ pub mod relations {
     const FRIEND_RATE: f32 = 0.01;
 
     fn gen_mind_with_gender_and_relation(name_dict: &NameDictionary, gender: &Gender, age: u32, relations: Vec<Relation>) -> Mind{
-        let (first_name, last_name) = random_name(&name_dict, &gender);
+        let (first_name, last_name) = random_mind_name(&name_dict, &gender);
         return Mind {
             id: Uuid::new_v4(),
             first_name,

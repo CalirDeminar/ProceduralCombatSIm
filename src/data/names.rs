@@ -1,4 +1,4 @@
-pub mod data;
+pub mod data_parser;
 pub mod names {
     use std::fs::File;
     use rand::Rng;
@@ -13,14 +13,18 @@ pub mod names {
 
     #[derive(PartialEq, Debug, Clone)]
     pub struct NameDictionary {
-        first_names: Vec<NameDefinition>,
-        last_names: Vec<NameDefinition>,
+        pub first_names: Vec<NameDefinition>,
+        pub last_names: Vec<NameDefinition>,
+        pub food_service_suffixes: Vec<NameDefinition>,
+        pub location_prefixes: Vec<NameDefinition>,
     }
 
     pub fn gen_name_dict() -> NameDictionary {
         return NameDictionary {
-            first_names: parse_file(String::from("./src/creature/mind/names/first_names.csv")),
-            last_names: parse_file(String::from("./src/creature/mind/names/last_names.csv")),
+            first_names: parse_file(String::from("./src/creature/mind/names/english_first_names.csv")),
+            last_names: parse_file(String::from("./src/creature/mind/names/english_last_names.csv")),
+            food_service_suffixes: parse_file(String::from("./src/creature/mind/names/food_service_suffixes.csv")),
+            location_prefixes: parse_file(String::from("./src/creature/mind/names/location_prefixes.csv"))
         }
     }
 
@@ -40,7 +44,14 @@ pub mod names {
         return String::from(&result.name);
     }
 
-    pub fn random_name<'a>(dict: &'a NameDictionary, gender: &Gender) -> (String, String) {
+    pub fn random_name(list: &Vec<NameDefinition>) -> String {
+        let mut rng = rand::thread_rng();
+        let roll: f32 = rng.gen();
+        let result = list[(roll*list.len() as f32) as usize].clone();
+        return result.name;
+    }
+
+    pub fn random_mind_name<'a>(dict: &'a NameDictionary, gender: &Gender) -> (String, String) {
         return (random_name_for_gender(&dict.first_names, &gender), random_name_for_gender(&dict.last_names, &gender));
     }
 

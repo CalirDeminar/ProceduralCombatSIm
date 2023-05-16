@@ -1,15 +1,14 @@
-pub mod names;
-pub mod relations;
-pub mod institutions;
+// pub mod relations;
 pub mod mind {
-    use std::{fs::File, io::Write};
+
 
     use rand::Rng;
     use rand_distr::{Normal, Distribution};
     use uuid::Uuid;
 
-    use super::names::names::*;
-    use super::relations::relations::*;
+    use crate::data::names::names::*;
+    // use super::relations::relations::*;
+    use crate::population::relations::relations::*;
 
 
     #[derive(PartialEq, Debug, Clone)]
@@ -44,7 +43,7 @@ pub mod mind {
         }
         return format!("Missing ID: {}", id);
     }
-    fn print_mind(mind: &Mind, population: &Vec<Mind>) -> String {
+    pub fn print_mind(mind: &Mind, population: &Vec<Mind>) -> String {
         let mut output = String::from("");
         output.push_str("===========\n");
         let relations: Vec<(&RelationVerb, String)> = mind.relations.iter().map(|(verb, id)| (verb, get_name_from_id(&id, &population))).collect();
@@ -63,13 +62,7 @@ pub mod mind {
         output.push_str(&format!("==========\n"));
         return output;
     }
-    fn print_population(population: &Vec<Mind>) -> String {
-        let mut output = String::from("");
-        for mind in population {
-            output.push_str(&print_mind(&mind, &population));
-        }
-        return output;
-    }
+
 
     pub fn random_char<'a>(name_dict: &NameDictionary) -> Mind {
         let mut rng = rand::thread_rng();
@@ -81,7 +74,7 @@ pub mod mind {
         if roll > 0.2 {
             gender = Gender::Female;
         }
-        let (first_name, last_name) = random_name(&name_dict, &gender);
+        let (first_name, last_name) = random_mind_name(&name_dict, &gender);
         let distribution = Normal::new(5.0, 10.0).unwrap();
         return Mind {
             id: Uuid::new_v4(),
@@ -91,44 +84,5 @@ pub mod mind {
             relations: Vec::new(),
             age: (rng.gen::<f32>() * 40.0) as u32 + 15 + distribution.sample(&mut rand::thread_rng()) as u32
         }
-    }
-
-    fn generate_base_population<'a>(i: usize, name_dict: &NameDictionary) -> Vec<Mind> {
-        let mut output: Vec<Mind> = vec![];
-        for _i in 0..i {
-            output.push(random_char(&name_dict));
-        }
-        return output;
-    }
-
-    pub fn generate_population(size: usize) -> Vec<Mind> {
-        let name_dict = gen_name_dict();
-        let mut population = generate_base_population(size, &name_dict);
-        population = add_partners_to_population(population, &name_dict);
-        population = add_parents_to_population(population, &name_dict);
-        population = link_friends_within_population(population);
-        return population
-    }
-
-    pub fn output_population(size: usize) {
-        let pop = generate_population(size);
-        // let output = format!("{:#?}", pop);
-        let mut file = File::create("./export.txt").unwrap();
-        let pop_log = print_population(&pop);
-        file.write_all(pop_log.into_bytes().as_slice()).unwrap();
-    }
-
-    // relation generation
-
-    // generate core population
-    // add generated parents to the population
-    //   for each entity, roll to see if their parents will be in the population
-    //  add spousal + partner relationships
-    //  roll and generate children and add to population
-
-    #[test]
-    fn generate_population_test() {
-        // let population = generate_population(50);
-        output_population(500);
     }
 }

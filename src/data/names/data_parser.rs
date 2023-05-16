@@ -1,9 +1,8 @@
-pub mod data {
+pub mod data_parser {
     use std::fs::File;
 
     use regex::Regex;
-
-    use crate::creature::mind::{names::names::NameDefinition, mind::Gender};
+    use crate::creature::mind::mind::*;
 
     const FREQUENCY_LIMIT: usize = 10;
 
@@ -72,8 +71,8 @@ pub mod data {
                 }
             }
         }
-        write_data(&first_names, String::from("./src/creature/mind/first_names.csv"));
-        write_data(&last_names, String::from("./src/creature/mind/last_names.csv"));
+        write_data(&first_names, String::from("./src/creature/mind/english_first_names.csv"));
+        write_data(&last_names, String::from("./src/creature/mind/english_last_names.csv"));
     }
 
     // #[test]

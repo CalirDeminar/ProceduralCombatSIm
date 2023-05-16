@@ -1,6 +1,7 @@
 pub mod institutions {
-
-    use crate::creature::mind::{names::names::{NameDictionary, random_name, gen_name_dict}, mind::Gender};
+    use rand::Rng;
+    use crate::creature::mind::mind::Gender;
+    use crate::data::names::names::*;
 
     #[derive(PartialEq, Debug, Clone)]
     pub enum InstituteType {
@@ -61,7 +62,7 @@ pub mod institutions {
     pub fn generate_population_institutions(name_dict: &NameDictionary) -> Vec<Institution>{
         let mut output: Vec<Institution> = Vec::new();
         for i in PUBLIC_INSTITUTES {
-            let (_, prefix) = random_name(&name_dict, &Gender::Ambiguous);
+            let (_, prefix) = random_mind_name(&name_dict, &Gender::Ambiguous);
             output.push(Institution { 
                 name: format!("{} {}", prefix, label_insitute_type(&i)), 
                 public: true, 
@@ -71,27 +72,38 @@ pub mod institutions {
         return output;
     }
 
-    pub fn gen_food_service(name_dict: &NameDictionary) -> String {
-        let suffixes = vec![
-            // non-specific
-            "Bar",
-            "Cafe",
-            "Bakers",
-            "Inn",
-            "Kitchen",
-            // specific
-            "Grill",
-            "Kebab",
-            "Pizza",
-            "Coffee",
-            "Brasserie"
-        ];
-        return String::from("");
+    fn gen_food_service(name_dict: &NameDictionary) -> String {
+        return String::from(format!(
+                "{} {} {}", 
+                &random_name(&name_dict.location_prefixes), 
+                &random_name(&name_dict.last_names),
+                &random_name(&name_dict.food_service_suffixes)
+            )
+        );
     }
 
+    pub fn generate_restaurants(i: usize, name_dict: &NameDictionary) -> Vec<Institution> {
+        let mut output: Vec<Institution> = Vec::new();
+        for _i in 0..i {
+            output.push( Institution {
+                name: gen_food_service(&name_dict),
+                public: false,
+                institute_type: InstituteType::FoodService
+            });
+        }
+        return output;
+    }
+
+    // #[test]
+    // fn generate_population_institutions_test() {
+    //     let name_dict = gen_name_dict();
+    //     println!("{:#?}", generate_population_institutions(&name_dict));
+    // }
+
     #[test]
-    fn generate_population_institutions_test() {
+    fn generate_restaurants_test() {
         let name_dict = gen_name_dict();
-        println!("{:#?}", generate_population_institutions(&name_dict));
+        // println!("{:#?}", &name_dict);
+        println!("{:#?}", generate_restaurants(10, &name_dict));
     }
 }

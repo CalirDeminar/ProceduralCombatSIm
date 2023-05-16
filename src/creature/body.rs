@@ -178,6 +178,7 @@ pub mod body {
     fn test_sum_child_part_size() {
         use crate::creature::humanoid::humanoid::*;
         let subject = humanoid();
+        println!("{:#?}", subject);
         assert_eq!(count_tagged_parts(&subject.body, BodyPartTag::Breath), 2);
     }
 
