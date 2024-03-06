@@ -1,85 +1,127 @@
 pub mod organs {
-    use crate::creature::{body::body::{BodyPartTag, BodyPart}};
-    fn gen_organ_set(name: String, tags: Vec<BodyPartTag>, count: u32, size: u32) -> Vec<BodyPart> {
-        let mut output: Vec<BodyPart> = vec![];
+    use crate::creature::body::body::{StatusTag, LocationTag};
+
+    #[derive(PartialEq, Debug, Clone, Copy)]
+    pub enum OrganFunction {
+        // Core
+        Breath,
+        Thought,
+        Nervous,
+        Circulation,
+        Structural,
+        Artery,
+        // Muscle
+        Motor,
+        // Sense
+        Sight,
+        Hearing,
+        Smell,
+        // Other
+        Retch,
+    }
+    #[derive(PartialEq, Debug, Clone)]
+    pub struct Organ {
+        pub name: String,
+        pub functions: Vec<OrganFunction>,
+        pub locations: Vec<LocationTag>,
+        pub conditions: Vec<StatusTag>,
+        pub size: u32,
+        // pub parent: &'a BodyPart,
+    }
+    fn gen_organ_set(name: String, functions: Vec<OrganFunction>, count: u32, size: u32) -> Vec<Organ> {
+        let mut output: Vec<Organ> = vec![];
         for _i in 0..count {
-            output.push(BodyPart {
+            output.push(Organ {
                 name: name.clone(),
-                tags: tags.clone(),
-                statuses: vec![],
-                internal: vec![],
-                children: vec![],
+                functions: functions.clone(),
+                conditions: vec![],
+                locations: vec![],
                 size
             })
         }
         if count == 2 {
-            output[0].tags.push(BodyPartTag::Left);
+            output[0].locations.push(LocationTag::Left);
             output[0].name = format!("{} {}", "Left", name.clone());
-            output[1].tags.push(BodyPartTag::Right);
+            output[1].locations.push(LocationTag::Right);
             output[1].name = format!("{} {}", "Right", name.clone());
         }
-        return output;
+        output
     }
-    pub fn hearts(count: u32, parent_size: u32) -> Vec<BodyPart> {
-        return gen_organ_set(
+    pub fn hearts(count: u32, parent_size: u32) -> Vec<Organ> {
+        gen_organ_set(
             String::from("Heart"), 
-            vec![BodyPartTag::Circulation], 
+            vec![OrganFunction::Circulation], 
             count, 
             parent_size / 20
-        );
+        )
     }
-    pub fn lungs(count: u32, parent_size: u32) -> Vec<BodyPart> {
-        return gen_organ_set(
+    pub fn lungs(count: u32, parent_size: u32) -> Vec<Organ> {
+        gen_organ_set(
             String::from("Lung"), 
-            vec![BodyPartTag::Breath], 
+            vec![OrganFunction::Breath], 
             count, 
             parent_size / 10
-        );
+        )
     }
-    pub fn spine(parent_size: u32) -> Vec<BodyPart> {
-        return vec![BodyPart {
+    pub fn spine(parent_size: u32) -> Vec<Organ> {
+        vec![Organ {
             name: String::from("Spine"),
-            statuses: vec![],
-            tags: vec![ BodyPartTag::Nervous],
-            internal: vec![],
-            children: vec![],
-            size: parent_size / 12
+            conditions: vec![],
+            functions: vec![ OrganFunction::Nervous, OrganFunction::Structural],
+            size: parent_size / 12,
+            locations: vec![]
         }]
     }
-    pub fn brain(parent_size: u32) -> Vec<BodyPart> {
-        return vec![BodyPart {
+    pub fn brain(parent_size: u32) -> Vec<Organ> {
+        vec![Organ {
             name: String::from("Brain"),
-            statuses: vec![],
-            tags: vec![ BodyPartTag::Thought],
-            internal: vec![],
-            children: vec![],
-            size: parent_size / 2
+            conditions: vec![],
+            functions: vec![ OrganFunction::Thought, OrganFunction::Nervous],
+            size: parent_size / 2,
+            locations: vec![]
         }]
     }
-    pub fn eyes(count: u32, parent_size: u32) -> Vec<BodyPart> {
-        return gen_organ_set(
+    pub fn eyes(count: u32, parent_size: u32) -> Vec<Organ> {
+        gen_organ_set(
             String::from("Eye"), 
-            vec![BodyPartTag::Sight], 
+            vec![OrganFunction::Sight], 
             count, 
             parent_size / 60
-        );
+        )
     }
-    pub fn ears(count: u32, parent_size: u32) -> Vec<BodyPart> {
-        return gen_organ_set(
+    pub fn ears(count: u32, parent_size: u32) -> Vec<Organ> {
+        gen_organ_set(
             String::from("Ear"), 
-            vec![BodyPartTag::Hearing], 
+            vec![OrganFunction::Hearing], 
             count, 
             parent_size / 60
-        );
+        )
     }
-    pub fn nose(parent_size: u32) -> Vec<BodyPart> {
-        return vec![BodyPart {
+    pub fn nose(parent_size: u32) -> Vec<Organ> {
+        vec![Organ {
             name: String::from("Nose"),
-            statuses: vec![],
-            tags: vec![BodyPartTag::Smell],
-            internal: vec![],
-            children: vec![],
-            size: parent_size / 60
+            conditions: vec![],
+            functions: vec![OrganFunction::Smell],
+            size: parent_size / 60,
+            locations: vec![]
+        }]
+    }
+    pub fn bone(parent_size: u32, parent_name: String) -> Vec<Organ> {
+        vec![Organ {
+            name: format!("{} Bone", parent_name),
+            conditions: vec![],
+            functions: vec![OrganFunction::Structural],
+            size: parent_size / 4,
+            locations: vec![]
+        }]
+    }
+    pub fn skull(parent_size: u32) -> Vec<Organ> {
+        vec![Organ {
+            name: String::from("Skull"),
+            conditions: vec![],
+            functions: vec![OrganFunction::Structural],
+            size: (parent_size as f32 / 0.9) as u32,
+            locations: vec![]
         }]
     }
 }

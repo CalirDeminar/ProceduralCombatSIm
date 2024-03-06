@@ -1,7 +1,9 @@
+pub mod creature_combat;
 pub mod combat {
     use crate::creature::body::body::get_ratio_of_working_body_tags;
     use crate::creature::creature::*;
     use crate::creature::body::body::*;
+    use crate::creature::organs::organs::OrganFunction;
     use rand::Rng;
     pub struct Weapon {
         pub damage: u32,
@@ -38,7 +40,7 @@ pub mod combat {
 
 
         let attacker_manipulation_modifier = get_ratio_of_working_body_tags(&attacker.body, BodyPartTag::Grasp);
-        let attacker_sight_modifier = get_ratio_of_working_body_tags(&attacker.body, BodyPartTag::Sight);
+        let attacker_sight_modifier = get_ratio_of_working_organ_tags(&attacker.body, OrganFunction::Sight);
 
         let attacker_blood_modifier = attacker.health_stats.blood_vol_ptc.min(attacker.health_stats.blood_oxy_ptc);
 
@@ -65,12 +67,12 @@ pub mod combat {
 
         if r < destruction_chance {
             if can_pen {
-                part.statuses.push(BodyPartStatus::Missing);
+                part.statuses.push(StatusTag::Missing);
             } else {
-                part.statuses.push(BodyPartStatus::Destroyed);
+                part.statuses.push(StatusTag::Destroyed);
             }
         }else if r + destruction_chance < wound_chance {
-            part.statuses.push(BodyPartStatus::Wound);
+            part.statuses.push(StatusTag::Wound);
             let new_damage = (weapon.damage as i32 - part.size as i32).max(0) as u32;
             let new_pen = (weapon.pen as i32 - part.size as i32).max(0) as u32;
             if new_damage > 0 {
@@ -87,7 +89,7 @@ pub mod combat {
             }
  
         } else if r + destruction_chance + wound_chance > cut_chance {
-            part.statuses.push(BodyPartStatus::Cut);
+            part.statuses.push(StatusTag::Cut);
         }
         return part;
     }
@@ -102,14 +104,14 @@ pub mod combat {
     }
 
         fn random_target<'a>(force: Vec<&'a mut Creature>) -> &'a mut Creature {
-        let total_size = force.iter().fold(0, |acc, c| acc + sum_child_part_size_r(&c.body));
+        let total_size = force.iter().fold(0, |acc, c| acc + c.body.sum_child_part_size_r());
 
         let mut rng = rand::thread_rng();
         let r: f32 = rng.gen();
         let roll = (r*total_size as f32) as u32;
         let mut total = 0;
         for c in force {
-            total += sum_child_part_size_r(&c.body);
+            total += c.body.sum_child_part_size_r();
             if roll > total {
                 return c;
             }
@@ -117,29 +119,12 @@ pub mod combat {
         panic!();
     }
 
-    fn run_combat<'a>(force_a: Vec<&'a mut Creature>, force_b: Vec<&'a mut Creature>) -> (Vec<&'a mut Creature>, Vec<&'a mut Creature>){
-        let max_length = force_a.len().max(force_b.len());
-        let mut a_clone = force_a.iter().map(|p| p.clone()).collect::<Vec<_>>();
-        let mut b_clone = force_b.iter().map(|p| p.clone()).collect::<Vec<_>>();
-        for i in 0..max_length {
-            if i < force_a.len() {
-                // let target = random_target(force_b);
-
-                
-            }
-            if i < force_b.len() {
-
-            }
-        }
-        return (force_a, force_b);
-    }
-
     #[test]
     fn resolve_damage_test() {
         use crate::creature::humanoid::humanoid::*;
         let mut subject_1 = humanoid();
         let mut subject_2 = humanoid();
-        for i in 0..=20 {
+        for _i in 0..=20 {
             resolve_attack_against_creature(&subject_1, &mut subject_2, &STAND_IN_WEAPON);
             resolve_attack_against_creature(&subject_2, &mut subject_1, &STAND_IN_WEAPON);
             recalculate_health(&mut subject_1);

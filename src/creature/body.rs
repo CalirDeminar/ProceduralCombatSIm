@@ -1,10 +1,10 @@
 pub mod body {
     use rand::Rng;
 
-    use crate::creature::humanoid::humanoid::humanoid;
+    use crate::creature::{creature::{print_body_part, print_creature}, humanoid::humanoid::humanoid, organs::organs::{Organ, OrganFunction}};
 
     #[derive(PartialEq, Debug, Clone, Copy)]
-    pub enum BodyPartStatus {
+    pub enum StatusTag {
         Bruise,
         Cut,
         Wound,
@@ -15,16 +15,26 @@ pub mod body {
     }
 
     #[derive(PartialEq, Debug, Clone, Copy)]
+    pub enum LocationTag {
+        Left,
+        Right,
+        Front,
+        Back,
+        Upper,
+        Lower,
+    }
+
+    #[derive(PartialEq, Debug, Clone, Copy)]
+    pub enum ActionTag {
+        StanceFly,
+        StanceWalk,
+        StanceSwim,
+        Grasp,
+        Weapon
+    }
+
+    #[derive(PartialEq, Debug, Clone, Copy)]
     pub enum BodyPartTag {
-        // Core
-        Breath,
-        Thought,
-        Nervous,
-        Circulation,
-        // Sense
-        Sight,
-        Hearing,
-        Smell,
         // Action
         Fly,
         Grasp,
@@ -38,70 +48,64 @@ pub mod body {
     pub struct BodyPart {
         pub name: String,
         pub tags: Vec<BodyPartTag>,
-        pub statuses: Vec<BodyPartStatus>,
-        pub internal: Vec<BodyPart>,
+        pub statuses: Vec<StatusTag>,
+        pub organs: Vec<Organ>,
         pub children: Vec<BodyPart>,
         pub size: u32,
     }
-
-    pub fn sum_child_part_size_r(part: &BodyPart) -> u32 {
-        if part.children.len() == 0 {
-            return part.size;
+    impl BodyPart {
+        pub fn sum_child_part_size_r(self: &Self) -> u32 {
+            if self.children.len() == 0 {
+                return self.size;
+            }
+            self.size + self.children.iter().fold(0, |acc, p| acc + p.sum_child_part_size_r())
         }
-        return part.size + part.children.iter().fold(0, |acc, p| acc + sum_child_part_size_r(p));
-    }
-    pub fn sum_internal_part_size_r(part: &BodyPart) -> u32 {
-        if part.internal.len() == 0 {
-            return part.size;
+        pub fn sum_internal_organ_part_size_r(self: &Self) -> u32 {
+            if self.organs.len() == 0 {
+                return 0;
+            }
+            self.organs.iter().fold(0, |acc, o| acc + o.size)
         }
-        return part.size + part.internal.iter().fold(0, |acc, p| acc + sum_internal_part_size_r(p));
+        pub fn count_organs_with_function(self: &Self, function: OrganFunction) -> usize {
+            let own_organ_count = self.organs.iter().filter(|o| o.functions.contains(&function)).count();
+            self.children.iter().fold(own_organ_count, |acc, c| acc + c.count_organs_with_function(function))
+        }
+        pub fn count_organs_with_function_and_condition(self: &Self, function: OrganFunction, condition: Option<StatusTag>) -> usize {
+            let local_count = self.organs.iter().filter(|o| o.functions.contains(&function) && (condition.is_none() || o.conditions.contains(&condition.unwrap()))).count();
+            self.children.iter().fold(local_count, |acc, c| acc + c.count_organs_with_function_and_condition(function, condition))
+        }
+        pub fn sum_organ_size_with_function_and_condition(self: &Self, function: OrganFunction, condition: Option<StatusTag>) -> u32 {
+            let organ_count = self.organs.iter().fold(0, |acc, o| acc + if o.functions.contains(&function) && (condition.is_none() || o.conditions.contains(&condition.unwrap())) { o.size} else {0});
+            self.children.iter().fold(organ_count, |acc, c| acc + c.sum_organ_size_with_function_and_condition(function, condition))
+        }
+        pub fn sum_part_size_with_function_and_condition(self: &Self, function: BodyPartTag, condition: Option<StatusTag>) -> u32 {
+            let own_size = if self.tags.contains(&function) && (condition.is_none() || self.statuses.contains(&condition.unwrap())) { self.size} else {0};
+            self.children.iter().fold(own_size, |acc, c| acc + c.sum_part_size_with_function_and_condition(function, condition))
+        }
+        pub fn sum_status_size(self: &Self, status: StatusTag) -> u32 {
+            let self_size = if self.statuses.contains(&status) { self.size } else { 0};
+            let self_organ_size = self.organs.iter().fold(0, |acc, o| acc + if o.conditions.contains(&status) { o.size} else {0});
+            self.children.iter().fold(self_size + self_organ_size, |acc, c| acc + c.sum_status_size(status))
+        }
+        pub fn print(self: &Self) {
+            print_body_part(self, "");
+        }
     }
-    pub fn count_tagged_parts(body: &BodyPart, tag: BodyPartTag) -> usize {
-        let local_count: usize = if body.tags.contains(&tag) { 1 } else {0};
-        let child_count = body.children.iter()
-            .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
-        let internal_count = body.internal.iter()
-            .fold(0, |acc, p| acc + count_tagged_parts(p, tag));
-        return local_count + child_count + internal_count;
+    pub fn get_ratio_of_working_organ_tags(body: &BodyPart, function: OrganFunction) -> f32 {
+        let total_size = body.sum_organ_size_with_function_and_condition(function, None);
+        let destroyed_size = body.sum_organ_size_with_function_and_condition(function, Some(StatusTag::Destroyed));
+        let missing_size = body.sum_organ_size_with_function_and_condition(function, Some(StatusTag::Missing));
+        let paralised_size = body.sum_organ_size_with_function_and_condition(function, Some(StatusTag::Paralised));
+        let broken_size = body.sum_organ_size_with_function_and_condition(function, Some(StatusTag::Broken));
+        let working_size = total_size - (destroyed_size + missing_size + paralised_size + broken_size);
+        return (working_size as f32) / (total_size as f32);
     }
-    fn sum_tagged_size(body: &BodyPart, tag: BodyPartTag) -> u32 {
-        let local_count: u32 = if body.tags.contains(&tag) { body.size } else {0};
-        let child_count = body.children.iter()
-            .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
-        let internal_count = body.internal.iter()
-            .fold(0, |acc, p| acc + sum_tagged_size(p, tag));
-        return local_count + child_count + internal_count;
-    }
-    pub fn count_tagged_parts_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> usize {
-        let local_count: usize = if body.tags.contains(&tag) && body.statuses.contains(&status) { 1 } else {0};
-        let child_count = body.children.iter()
-            .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
-        let internal_count = body.internal.iter()
-            .fold(0, |acc, p| acc + count_tagged_parts_with_status(p, tag, status));
-        return local_count + child_count + internal_count;
-    }
-    pub fn sum_status_size(body: &BodyPart, status: BodyPartStatus) -> u32 {
-        let local_count: u32 = if  body.statuses.contains(&status) { body.size } else {0}; 
-        let child_count = body.children.iter()
-            .fold(0, |acc, p| acc + sum_status_size(p, status));
-        let internal_count = body.internal.iter()
-            .fold(0, |acc, p| acc + sum_status_size(p, status));
-        return local_count + child_count + internal_count;
-    }
-    fn sum_tagged_size_with_status(body: &BodyPart, tag: BodyPartTag, status: BodyPartStatus) -> u32 {
-        let local_count: u32 = if body.tags.contains(&tag) && body.statuses.contains(&status) { body.size } else {0};
-        let child_count = body.children.iter()
-            .fold(0, |acc, p| acc + sum_tagged_size_with_status(p, tag, status));
-        let internal_count = body.internal.iter()
-            .fold(0, |acc, p| acc + sum_tagged_size_with_status(p, tag, status));
-        return local_count + child_count + internal_count;
-    }
-    pub fn get_ratio_of_working_body_tags(body: &BodyPart, tag: BodyPartTag) -> f32 {
-        let total_size = sum_tagged_size(body, tag);
-        let destroyed_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Destroyed);
-        let missing_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Missing);
-        let paralised_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Paralised);
-        let broken_size = sum_tagged_size_with_status(body, tag, BodyPartStatus::Broken);
+    pub fn get_ratio_of_working_body_tags(body: &BodyPart, function: BodyPartTag) -> f32 {
+        let total_size = body.sum_part_size_with_function_and_condition(function, None);
+        let destroyed_size = body.sum_part_size_with_function_and_condition(function, Some(StatusTag::Destroyed));
+        let missing_size = body.sum_part_size_with_function_and_condition(function, Some(StatusTag::Missing));
+        let paralised_size = body.sum_part_size_with_function_and_condition(function, Some(StatusTag::Paralised));
+        let broken_size = body.sum_part_size_with_function_and_condition(function, Some(StatusTag::Broken));
         let working_size = total_size - (destroyed_size + missing_size + paralised_size + broken_size);
         return (working_size as f32) / (total_size as f32);
     }
@@ -113,19 +117,11 @@ pub mod body {
         return body.children.iter_mut()
             .fold((c, None), |(acc_c, acc_r), p| if acc_r.is_none() { random_part_is_selected(p, acc_c, roll) } else {(c, acc_r)});
     }
-    fn random_internal_is_selected<'a>(body: &'a mut BodyPart, count: u32, roll: u32) -> (u32, Option<&'a mut BodyPart>) {
-        let c = count + body.size;
-        if c > roll {
-            return (c, Some(body));
-        }
-        return body.internal.iter_mut()
-            .fold((c, None), |(acc_c, acc_r), p| if acc_r.is_none() { random_part_is_selected(p, acc_c, roll) } else {(c, acc_r)});
-    }
     pub fn random_weighted_part<'a>(body: &'a mut BodyPart) -> &'a mut BodyPart {
         if body.children.len() == 0 {
             return body;
         }
-        let total_size = sum_child_part_size_r(&body);
+        let total_size = body.sum_child_part_size_r();
 
         let mut rng = rand::thread_rng();
         let r:f32 = rng.gen();
@@ -136,10 +132,10 @@ pub mod body {
         return rtn.unwrap();
     }
     pub fn random_weighted_internal<'a>(body: &'a mut BodyPart) -> Option<&'a mut BodyPart> {
-        if body.internal.len() == 0 {
+        if body.organs.len() == 0 {
             return None;
         }
-        let internal_size = sum_internal_part_size_r(body);
+        let internal_size = body.sum_internal_organ_part_size_r();
 
         let mut rng = rand::thread_rng();
         let r:f32 = rng.gen();
@@ -149,37 +145,14 @@ pub mod body {
 
         return rtn;    
     }
-    // pub fn random_weighted_part_with_internal(body: &BodyPart) -> &BodyPart {
-    //     let p = random_weighted_part(body);
-    //     if p.internal.len() == 0 {
-    //         return p;
-    //     }
-        
-    //     let internals: Vec<&BodyPart> = vec![body.internal.iter().collect(), vec![p]].concat();
-    //     let total_size = sum_part_size(&internals);
 
-
-    //     let mut rng = rand::thread_rng();
-    //     let r:f32 = rng.gen();
-    //     let roll = (r * total_size as f32) as u32;
-
-    //     let mut t = 0;
-    //     for part in internals {
-    //         t += part.size;
-    //         if t > roll {
-    //             return part;
-    //         }
-    //     }
-
-    //     return body;
-    // }
 
     #[test]
     fn test_sum_child_part_size() {
         use crate::creature::humanoid::humanoid::*;
         let subject = humanoid();
-        println!("{:#?}", subject);
-        assert_eq!(count_tagged_parts(&subject.body, BodyPartTag::Breath), 2);
+        // println!("{:#?}", subject);
+        assert_eq!(subject.body.count_organs_with_function(OrganFunction::Breath), 2);
     }
 
     #[test]
