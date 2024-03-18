@@ -1,4 +1,4 @@
-pub mod creature_combat {
+pub mod creature_weapons {
     use crate::creature::{body::body::{BodyPart, BodyPartTag}, creature::Creature, humanoid::humanoid::humanoid};
 
     // return - Option(String(noun), String(Verb))
@@ -23,10 +23,10 @@ pub mod creature_combat {
         part.children.iter().fold(base, |acc, p| vec![acc, get_attacks_for_part(p)].concat())
     }
 
-    #[test]
-    fn test(){
-        let subject = humanoid();
-        // println!("{:?}", subject.body.print());
-        println!("{:#?}", get_attacks_for_part(&subject.body));
-    }
+    // #[test]
+    // fn test(){
+    //     let subject = humanoid();
+    //     // println!("{:?}", subject.body.print());
+    //     // println!("{:#?}", get_attacks_for_part(&subject.body));
+    // }
 }

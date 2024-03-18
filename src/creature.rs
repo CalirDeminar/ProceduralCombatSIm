@@ -1,10 +1,11 @@
 pub mod organs;
 pub mod humanoid;
 pub mod body;
+pub mod mind;
 pub mod creature {
     use crate::creature::body::body::*;
 
-    use super::organs::organs::{Organ, OrganFunction};
+    use super::{mind::mind::Mind, organs::organs::{Organ, OrganFunction}};
 
     const BREATH_LOSS_RATE: f32 = 0.1;
 
@@ -78,7 +79,7 @@ pub mod creature {
         
         subject.health_stats.blood_vol_ptc = (subject.health_stats.blood_vol_ptc - total_blood_loss).min(1.0).max(0.0);
 
-        let has_brain = &subject.body.count_organs_with_function(OrganFunction::Thought) > &0;
+        let has_brain = get_ratio_of_working_organ_tags(&subject.body, OrganFunction::Thought) > 0.0;
 
         if subject.health_stats.blood_vol_ptc <= 0.0 || 
             subject.health_stats.blood_oxy_ptc <= 0.0 ||
@@ -121,7 +122,27 @@ pub mod creature {
     pub struct Creature {
         pub species: String,
         pub health_stats: HealthStats,
-        pub body: BodyPart
+        pub body: BodyPart,
+        pub mind: Mind,
+    }
+
+    impl Creature {
+        pub fn ratio_of_working_tagged_parts(self: &Self, tag: BodyPartTag) -> f32 {
+            let max_size = self.body.sum_part_size_with_function_and_condition(tag, None);
+            let missing_size = self.body.sum_part_size_with_function_and_condition(tag, Some(StatusTag::Missing)) 
+                + self.body.sum_part_size_with_function_and_condition(tag, Some(StatusTag::Destroyed))
+                + self.body.sum_part_size_with_function_and_condition(tag, Some(StatusTag::Paralised))
+                + self.body.sum_part_size_with_function_and_condition(tag, Some(StatusTag::Broken));
+            (max_size - missing_size) as f32 / max_size as f32
+        }
+        pub fn ratio_of_working_tagged_organs(self: &Self, tag: OrganFunction) -> f32 {
+            let max_size = self.body.sum_organ_size_with_function_and_condition(tag, None);
+            let missing_size = self.body.sum_organ_size_with_function_and_condition(tag, Some(StatusTag::Missing)) 
+                + self.body.sum_organ_size_with_function_and_condition(tag, Some(StatusTag::Destroyed))
+                + self.body.sum_organ_size_with_function_and_condition(tag, Some(StatusTag::Paralised))
+                + self.body.sum_organ_size_with_function_and_condition(tag, Some(StatusTag::Broken));
+            (max_size - missing_size) as f32 / max_size as f32
+        }
     }
 
 }
@@ -187,5 +208,23 @@ mod tests {
         subject.body.print();
         recalculate_health(&mut subject);
         assert_eq!(subject.body.count_organs_with_function_and_condition(OrganFunction::Breath, Some(StatusTag::Destroyed)), 2);
+    }
+
+    #[test]
+    fn ratio_of_working_tagged_parts_test() {
+        let mut subject = humanoid();
+        assert_eq!(subject.ratio_of_working_tagged_parts(BodyPartTag::Stance), 1.0);
+        subject.body.statuses.push(StatusTag::Destroyed);
+        recalculate_health(&mut subject);
+        assert_eq!(subject.ratio_of_working_tagged_parts(BodyPartTag::Stance), 0.0);
+    }
+
+    #[test]
+    fn ratio_of_working_tagged_organs_test() {
+        let mut subject = humanoid();
+        assert_eq!(subject.ratio_of_working_tagged_organs(OrganFunction::Sight), 1.0);
+        subject.body.statuses.push(StatusTag::Destroyed);
+        recalculate_health(&mut subject);
+        assert_eq!(subject.ratio_of_working_tagged_organs(OrganFunction::Sight), 0.0);
     }
 }

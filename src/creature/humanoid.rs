@@ -1,5 +1,6 @@
 pub mod humanoid {
     use crate::creature::body::body::*;
+    use crate::creature::mind::mind::random_mind;
     use crate::creature::organs::organs::*;
     use crate::creature::creature::*;
 
@@ -106,6 +107,7 @@ pub mod humanoid {
                                 eyes(2, HEAD_SIZE),
                                 ears(2, HEAD_SIZE),
                                 nose(HEAD_SIZE),
+                                brain(HEAD_SIZE)
                             ].concat(),
                             children: vec![],
                             size: HEAD_SIZE
@@ -117,7 +119,8 @@ pub mod humanoid {
                     ]
                 ].concat(),
                 size: BODY_SIZE
-            }
+            },
+            mind: random_mind()
         }
     }
 }

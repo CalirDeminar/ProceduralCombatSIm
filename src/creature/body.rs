@@ -55,7 +55,7 @@ pub mod body {
     }
     impl BodyPart {
         pub fn sum_child_part_size_r(self: &Self) -> u32 {
-            if self.children.len() == 0 {
+            if self.children.len() == 0 || self.statuses.contains(&StatusTag::Missing) {
                 return self.size;
             }
             self.size + self.children.iter().fold(0, |acc, p| acc + p.sum_child_part_size_r())

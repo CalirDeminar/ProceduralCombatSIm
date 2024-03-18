@@ -1,4 +1,6 @@
-pub mod creature_combat;
+pub mod creature_weapons;
+pub mod creature_modifiers;
+pub mod targeting;
 pub mod combat {
     use crate::creature::body::body::get_ratio_of_working_body_tags;
     use crate::creature::creature::*;
@@ -15,7 +17,7 @@ pub mod combat {
     // Add in some form of weapon damage inheritance from creature strength
     //  (If a melee weapon)
     const STAND_IN_WEAPON: Weapon = Weapon {
-        damage: 2000,
+        damage: 500,
         pen: 1,
         rof: 1,
         range: 1
@@ -34,23 +36,14 @@ pub mod combat {
         let mut rng = rand::thread_rng();
         let r: f32 = rng.gen();
 
-        let target_blood_modifier = target.health_stats.blood_vol_ptc.min(target.health_stats.blood_oxy_ptc);
-        let target_mobility_modifier = get_ratio_of_working_body_tags(&target.body, BodyPartTag::Stance)
-            * target_blood_modifier;
-
-
-        let attacker_manipulation_modifier = get_ratio_of_working_body_tags(&attacker.body, BodyPartTag::Grasp);
-        let attacker_sight_modifier = get_ratio_of_working_organ_tags(&attacker.body, OrganFunction::Sight);
-
-        let attacker_blood_modifier = attacker.health_stats.blood_vol_ptc.min(attacker.health_stats.blood_oxy_ptc);
-
-        let attacker_hit_modifier = attacker_manipulation_modifier * attacker_sight_modifier * attacker_blood_modifier;
-        let hit_chance = BASE_HIT_CHANCE * (2.0 - target_mobility_modifier) * attacker_hit_modifier;
-        return r < hit_chance;
+        let attacker_hit_modifier = attacker.to_hit_modifier();
+        let hit_chance = BASE_HIT_CHANCE * target.to_be_hit_modifier() * attacker_hit_modifier;
+        // println!("To Hit Chance: {} - attacker_mult: {} target_mult: {}", hit_chance, attacker_hit_modifier, target.to_be_hit_modifier());
+        r < hit_chance
     }
 
     fn damage_chance(damage: f32, size: f32, sqrt_multiplier: f32) -> f32 {
-        return 1.0-((size.sqrt() *sqrt_multiplier)/damage).min(1.0).max(0.0);
+        1.0-((size.sqrt() *sqrt_multiplier)/damage).min(1.0).max(0.0)
     }
 
     fn resolve_damage_against_part<'a>(part: &'a mut BodyPart, weapon: &Weapon) -> &'a BodyPart {
@@ -103,32 +96,24 @@ pub mod combat {
         return target;
     }
 
-        fn random_target<'a>(force: Vec<&'a mut Creature>) -> &'a mut Creature {
-        let total_size = force.iter().fold(0, |acc, c| acc + c.body.sum_child_part_size_r());
-
-        let mut rng = rand::thread_rng();
-        let r: f32 = rng.gen();
-        let roll = (r*total_size as f32) as u32;
-        let mut total = 0;
-        for c in force {
-            total += c.body.sum_child_part_size_r();
-            if roll > total {
-                return c;
-            }
-        }
-        panic!();
-    }
-
     #[test]
     fn resolve_damage_test() {
         use crate::creature::humanoid::humanoid::*;
         let mut subject_1 = humanoid();
         let mut subject_2 = humanoid();
-        for _i in 0..=20 {
+        
+        for i in 0..=50 {
+            if !subject_1.health_stats.alive || !subject_2.health_stats.alive {
+                continue;
+            }
             resolve_attack_against_creature(&subject_1, &mut subject_2, &STAND_IN_WEAPON);
             resolve_attack_against_creature(&subject_2, &mut subject_1, &STAND_IN_WEAPON);
             recalculate_health(&mut subject_1);
             recalculate_health(&mut subject_2);
+            println!("R{:?}----", i);
+            println!("1: {:#?}", subject_1.health_stats);
+            println!("2: {:#?}", subject_2.health_stats);
+            
         }
 
         print_creature(&subject_1);
